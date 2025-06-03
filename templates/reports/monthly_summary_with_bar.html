@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Monthly Summary with Graph</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      background: #f8f9fa;
+      padding: 0;
+      margin: 0;
+      color: #222;
+    }
+    .container {
+      max-width: 1100px;
+      margin: 40px auto 30px auto;
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 2px 16px rgba(0,0,0,0.07);
+      padding: 40px 32px 32px 32px;
+    }
+    .header {
+      text-align: center;
+      margin-bottom: 18px;
+    }
+    .header h1 {
+      color: #007bff;
+      font-size: 2.2rem;
+      margin-bottom: 0.2em;
+      letter-spacing: 1px;
+    }
+    .subtitle {
+      text-align: center;
+      color: #555;
+      margin-bottom: 32px;
+      font-size: 1.08rem;
+    }
+    .chart {
+      text-align: center;
+      margin: 40px 0 30px 0;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+      font-size: 1rem;
+      background: #fff;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.03);
+    }
+    th, td {
+      padding: 10px 12px;
+      border-bottom: 1px solid #e9ecef;
+    }
+    th {
+      background-color: #f1f3f6;
+      color: #007bff;
+      font-weight: 600;
+      text-align: left;
+      border-top: 2px solid #dee2e6;
+    }
+    tr:last-child td {
+      border-bottom: none;
+    }
+    tfoot td {
+      font-weight: bold;
+      background: #f8fafc;
+      color: #222;
+      border-top: 2px solid #007bff;
+      font-size: 1.08em;
+    }
+    .footer {
+      margin-top: 50px;
+      font-size: 13px;
+      text-align: center;
+      color: #666;
+    }
+    @media (max-width: 900px) {
+      .container { padding: 18px 2vw; }
+      table, th, td { font-size: 0.97rem; }
+    }
+    @media (max-width: 600px) {
+      .container { padding: 6px 0.5vw; }
+      table, th, td { font-size: 0.93rem; }
+      .header h1 { font-size: 1.3rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>Monthly Service Summary</h1>
+    </div>
+    <div class="subtitle">
+      <strong>Date Range:</strong> {{ start_date }} to {{ end_date }}<br/>
+      <strong>Total Jobs:</strong> {{ records|length }}
+    </div>
+
+    <div class="chart">
+      <h2 style="color:#007bff; font-size:1.2em;">Service Type Breakdown</h2>
+      <img src="{{ chart_data }}" alt="Job Type Pie Chart" width="400"/>
+    </div>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Job ID</th>
+          <th>Date</th>
+          <th>Technician</th>
+          <th>Customer</th>
+          <th>Job Type</th>
+          <th>Vehicle</th>
+          <th>Total</th>
+          <th>Cash</th>
+          <th>Credit</th>
+          <th>Parts</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for r in records %}
+        <tr>
+          <td>{{ r.job_id }}</td>
+          <td>{{ r.date }}</td>
+          <td>{{ r.tech }}</td>
+          <td>{{ r.customer_name or 'N/A' }}</td>
+          <td>{{ r.job_type }}</td>
+          <td>{{ r.vehicle or 'N/A' }}</td>
+          <td>${{ r.total or '0.00' }}</td>
+          <td>${{ r.cash or '0.00' }}</td>
+          <td>${{ r.credit or '0.00' }}</td>
+          <td>${{ r.parts or '0.00' }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+      <tfoot>
+        <tr>
+          <td colspan="6" style="color:#007bff;font-weight:600;">Totals</td>
+          <td>${{ records|sum(attribute='total') if records else '0.00' }}</td>
+          <td>${{ records|sum(attribute='cash') if records else '0.00' }}</td>
+          <td>${{ records|sum(attribute='credit') if records else '0.00' }}</td>
+          <td>${{ records|sum(attribute='parts') if records else '0.00' }}</td>
+        </tr>
+      </tfoot>
+    </table>
+
+    <div class="footer">
+      AutoClose System &copy; {{ now.year }}
+    </div>
+  </div>
+</body>
+</html> 

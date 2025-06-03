@@ -1,0 +1,114 @@
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>AutoClose | Reports Archive</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <!-- Bootstrap CSS -->
+  <link
+    href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+    rel="stylesheet"
+  />
+  <!-- Bootstrap Icons -->
+  <link
+    href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css"
+    rel="stylesheet"
+  />
+
+  <style>
+    body {
+      background-color: #f8f9fa;
+    }
+    .report-card {
+      border-radius: 0.5rem;
+      box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+      margin-bottom: 1.5rem;
+    }
+    .report-card .card-header {
+      background-color: #343a40;
+      color: #fff;
+      font-weight: 500;
+      font-size: 1.1rem;
+    }
+    .file-link {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .file-link .bi {
+      font-size: 1.25rem;
+    }
+    .no-reports {
+      font-size: 1rem;
+      color: #6c757d;
+    }
+  </style>
+</head>
+<body class="container py-4">
+  <!-- Header -->
+  <header class="d-flex flex-column flex-md-row align-items-md-center mb-4">
+    <div class="d-flex align-items-center mb-3 mb-md-0">
+      <i class="bi bi-archive-fill text-primary me-2" style="font-size: 2rem;"></i>
+      <h1 class="h4 m-0">Archived Reports</h1>
+    </div>
+    <nav class="ms-md-auto">
+      <a href="/" class="btn btn-outline-secondary btn-sm">← Home</a>
+    </nav>
+  </header>
+
+  <!-- Alerts if no folders -->
+  {% if not folders %}
+    <div class="alert alert-info text-center no-reports" role="alert">
+      No archived reports available.
+    </div>
+  {% endif %}
+
+  <!-- Report Folders List -->
+  <div class="row">
+    {% for folder in folders %}
+      <div class="col-12 col-md-6 col-lg-4">
+        <div class="card report-card">
+          <div class="card-header d-flex justify-content-between align-items-center">
+            <span>
+              <a href="{{ url_for('reports.reports_by_date', date_str=folder.date) }}" class="text-decoration-none">
+                {{ folder.date }}
+              </a>
+            </span>
+            <span class="badge bg-secondary">{{ folder.files|length }}</span>
+          </div>
+          <ul class="list-group list-group-flush">
+            {% for file in folder.files %}
+              {% set ext = file.rsplit('.', 1)[-1].lower() %}
+              <li class="list-group-item">
+                <a href="{{ folder.url_path }}/{{ file }}" target="_blank" class="file-link text-decoration-none">
+                  {% if ext == 'pdf' %}
+                    <i class="bi bi-file-earmark-pdf-fill text-danger"></i>
+                  {% elif ext in ['xlsx', 'xls'] %}
+                    <i class="bi bi-file-earmark-excel-fill text-success"></i>
+                  {% else %}
+                    <i class="bi bi-file-earmark-fill text-secondary"></i>
+                  {% endif %}
+                  <span>{{ file }}</span>
+                </a>
+              </li>
+            {% endfor %}
+          </ul>
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+
+  <!-- Footer -->
+  <footer class="mt-5 text-center text-muted">
+    &copy; {{ now.year }} AutoClose — All rights reserved.
+  </footer>
+
+  <!-- Bootstrap JS Bundle (optional for interactive components) -->
+  <script
+    src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"
+  ></script>
+</body>
+</html>
+```

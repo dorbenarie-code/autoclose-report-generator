@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>No File Selected</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <!-- Bootstrap CSS -->
+  <link
+    href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+    rel="stylesheet"
+    integrity="sha384-9ndCyUa6mY5YbH5fSY2xNnZD5n9+gqYQIQ0jNDTm0fL0uMbYXJ1yQPhR+0i0yJyQ"
+    crossorigin="anonymous"
+  />
+  <!-- Bootstrap Icons -->
+  <link
+    href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css"
+    rel="stylesheet"
+  />
+
+  <style>
+    body {
+      background-color: #f8f9fa;
+      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      color: #343a40;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 1rem;
+    }
+
+    .card {
+      border: none;
+      border-radius: 0.75rem;
+      max-width: 600px;
+      width: 100%;
+      box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+    }
+
+    .card-header {
+      background-color: #ffc107;
+      color: #212529;
+      border-top-left-radius: 0.75rem;
+      border-top-right-radius: 0.75rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      padding: 0.75rem 1rem;
+      font-size: 1.25rem;
+    }
+
+    .error-icon {
+      font-size: 2rem;
+      color: #dc3545;
+    }
+
+    .card-body {
+      padding: 1.5rem;
+      text-align: center;
+    }
+
+    .lead {
+      font-size: 1.125rem;
+      font-weight: 500;
+      margin-bottom: 1rem;
+    }
+
+    .instructions-list {
+      list-style: none;
+      padding: 0;
+      margin: 1rem 0;
+      text-align: left;
+    }
+
+    .instructions-list li {
+      display: flex;
+      align-items: flex-start;
+      margin-bottom: 0.75rem;
+    }
+
+    .instructions-list li i {
+      margin-right: 0.5rem;
+      margin-top: 0.15rem;
+      flex-shrink: 0;
+      color: #28a745;
+    }
+
+    .instructions-list code {
+      background-color: #f1f3f5;
+      padding: 0.15rem 0.3rem;
+      border-radius: 0.25rem;
+      font-size: 0.95rem;
+      direction: ltr;
+    }
+
+    .btn-primary {
+      background-color: #007bff;
+      border-color: #007bff;
+      font-weight: 600;
+      padding: 0.75rem 1.5rem;
+      border-radius: 0.5rem;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .btn-primary:hover,
+    .btn-primary:focus {
+      background-color: #0069d9;
+      border-color: #0062cc;
+      outline: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="card" role="alert" aria-labelledby="error-heading" aria-live="assertive">
+    <!-- Error Header -->
+    <div class="card-header" id="error-heading">
+      <i class="bi bi-folder-x-fill error-icon" aria-hidden="true"></i>
+      Error: No File Selected
+    </div>
+
+    <!-- Error Body -->
+    <div class="card-body">
+      <p class="lead" id="error-message">
+        You must select a file before submitting the form.
+      </p>
+      <p class="text-muted mb-3">
+        To fix this, follow these steps:
+      </p>
+      <ul class="instructions-list" aria-describedby="error-message">
+        <li>
+          <i class="bi bi-check-circle-fill" aria-hidden="true"></i>
+          Click the <strong>“Choose File”</strong> button.
+        </li>
+        <li>
+          <i class="bi bi-check-circle-fill" aria-hidden="true"></i>
+          Select a supported file format: <code>.txt</code>, <code>.png</code>, <code>.jpg</code>, <code>.jpeg</code>.
+        </li>
+        <li>
+          <i class="bi bi-check-circle-fill" aria-hidden="true"></i>
+          After selecting a file, click the green <strong>“Process and Generate Report”</strong> button.
+        </li>
+      </ul>
+      <a
+        href="/"
+        class="btn btn-primary"
+        role="button"
+        aria-label="Back to Upload Form"
+      >
+        <i class="bi bi-arrow-left-circle" aria-hidden="true"></i>
+        Back to Upload Form
+      </a>
+    </div>
+  </div>
+
+  <!-- Bootstrap JS (optional) -->
+  <script
+    src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"
+    integrity="sha384-ENjdO4Dr2bkBIFxQpeoXThkQ6VlVQK4a/6PI0i6V9KI65qnmh7vvDHj7Kc02KMpD"
+    crossorigin="anonymous"
+  ></script>
+</body>
+</html>

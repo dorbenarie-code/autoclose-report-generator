@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>AutoClose – Technician Reports</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <!-- Bootstrap CSS -->
+  <link
+    href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css"
+    rel="stylesheet"
+  />
+  <!-- Bootstrap Icons -->
+  <link
+    href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css"
+    rel="stylesheet"
+  />
+  <!-- Custom SaaS Style & Dark Mode -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+
+  <!-- Custom Styles -->
+  <style>
+    body {
+      background-color: #eef2f5;
+      font-family: "Segoe UI", sans-serif;
+    }
+
+    .navbar-brand {
+      font-size: 1.5rem;
+      font-weight: bold;
+      color: #003366;
+    }
+
+    .hero {
+      background: linear-gradient(90deg, #003366, #005580);
+      color: white;
+      padding: 3rem 1rem;
+      border-radius: 0 0 1rem 1rem;
+      margin-bottom: 2rem;
+      text-align: center;
+    }
+
+    .hero h1 {
+      font-size: 2.5rem;
+    }
+
+    .card {
+      border: none;
+      border-radius: 1rem;
+      background-color: #ffffff;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+    }
+
+    .form-label {
+      font-weight: 600;
+    }
+
+    .btn-primary {
+      background-color: #007b8a;
+      border: none;
+    }
+
+    .btn-primary:hover {
+      background-color: #005f66;
+    }
+
+    .btn-outline-secondary {
+      font-weight: bold;
+    }
+
+    .note-text {
+      font-size: 0.85rem;
+      color: #6c757d;
+    }
+
+    .card-footer {
+      font-size: 0.85rem;
+      color: #6c757d;
+      background-color: #f8f9fa;
+    }
+  </style>
+</head>
+
+<body>
+  <!-- Top Navbar -->
+  <nav class="navbar navbar-light bg-white shadow-sm px-4">
+    <a class="navbar-brand" href="#">
+      <i class="bi bi-clipboard2-check me-2"></i>AutoClose
+    </a>
+  </nav>
+
+  <!-- Hero Section -->
+  <div class="hero">
+    <h1><i class="bi bi-gear-fill me-2"></i> AutoClose – Technician Report Automation</h1>
+    <p class="lead">Upload, process and generate clean reports – all in one click.</p>
+  </div>
+
+  <!-- Main Upload Form -->
+  <div class="container">
+    <div class="row justify-content-center">
+      <div class="col-md-10 col-lg-8">
+        <div class="card p-4">
+          <!-- Flash Messages -->
+          {% with messages = get_flashed_messages() %}
+            {% if messages %}
+              <div class="alert alert-info mt-3 text-center">
+                {{ messages[0] }}
+              </div>
+            {% endif %}
+          {% endwith %}
+
+          <!-- Form -->
+          <form id="uploadForm" method="POST" action="/upload" enctype="multipart/form-data" novalidate>
+            <!-- Step 1 -->
+            <h5 class="text-muted mb-3"><i class="bi bi-cloud-arrow-up me-2"></i>Step 1 – Upload File</h5>
+            <div class="mb-4">
+              <label for="file" class="form-label">Select Report File</label>
+              <input class="form-control" type="file" id="file" name="file" required />
+            </div>
+
+            <!-- Step 2 -->
+            <h5 class="text-muted mt-4 mb-3"><i class="bi bi-chat-left-text me-2"></i>Step 2 – Or Paste Raw Text</h5>
+            <div class="mb-4">
+              <label for="free_text" class="form-label">Raw Text</label>
+              <textarea class="form-control" name="free_text" id="free_text" rows="6"></textarea>
+            </div>
+
+            <!-- Step 3 -->
+            <h5 class="text-muted mt-4 mb-3"><i class="bi bi-calendar-range me-2"></i>Step 3 – Select Date Range</h5>
+            <div class="row mb-4">
+              <div class="col-md-6">
+                <label for="start_date" class="form-label">Start Date</label>
+                <input type="date" class="form-control" id="start_date" name="start_date" required />
+              </div>
+              <div class="col-md-6">
+                <label for="end_date" class="form-label">End Date</label>
+                <input type="date" class="form-control" id="end_date" name="end_date" required />
+              </div>
+            </div>
+
+            <!-- Step 4 -->
+            <h5 class="text-muted mt-4 mb-3"><i class="bi bi-file-earmark-bar-graph me-2"></i>Step 4 – Select Report Type</h5>
+            <fieldset class="mb-4">
+              <div class="form-check">
+                <input class="form-check-input" type="checkbox" id="personal" name="report_type" value="personal" checked />
+                <label class="form-check-label" for="personal">Personal PDFs</label>
+              </div>
+              <div class="form-check">
+                <input class="form-check-input" type="checkbox" id="monthly" name="report_type" value="monthly" />
+                <label class="form-check-label" for="monthly">Monthly Summary</label>
+              </div>
+            </fieldset>
+
+            <!-- Submit Button -->
+            <h5 class="text-muted mt-4 mb-3"><i class="bi bi-rocket-takeoff me-2"></i>Step 5 – Generate</h5>
+            <div class="d-grid">
+              <button type="button" id="resetBtn" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-counterclockwise me-2"></i>Reset Form
+              </button>
+              <button type="submit" id="submitBtn" class="btn btn-primary px-5 py-2">
+                <span id="btnText">🚀 Generate Report</span>
+                <span
+                  id="btnSpinner"
+                  class="spinner-border spinner-border-sm text-light ms-2"
+                  role="status"
+                  style="display: none;"
+                ></span>
+              </button>
+            </div>
+          </form>
+
+          <!-- Footer -->
+          <div class="card-footer text-center mt-4">
+            AutoClose &copy; {{ now.year }} – All rights reserved
+          </div>
+        </div>
+
+        <!-- Reports Link -->
+        <div class="text-center reports-link">
+          <a href="/reports" class="btn btn-outline-secondary border-2 px-4 py-2">
+            <i class="bi bi-bar-chart-line me-2"></i>View All Reports
+          </a>
+        </div>
+
+        <!-- Business Signature -->
+        <div class="text-center mt-5 text-muted small" style="font-weight: 500;">
+          Designed by <strong>Dor Ben Arie</strong> · <span style="color:#007b8a;">Smart. Sharp. Seamless.</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bootstrap Bundle JS (with Popper) -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+  <!-- Spinner & Reset Script -->
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      const form = document.getElementById("uploadForm");
+      const submitBtn = document.getElementById("submitBtn");
+      const btnText = document.getElementById("btnText");
+      const btnSpinner = document.getElementById("btnSpinner");
+      const resetBtn = document.getElementById("resetBtn");
+
+      form.addEventListener("submit", function () {
+        submitBtn.disabled = true;
+        resetBtn.disabled = true;
+        btnText.textContent = "Uploading...";
+        btnSpinner.style.display = "inline-block";
+      });
+
+      resetBtn.addEventListener("click", function () {
+        form.reset();
+      });
+    });
+  </script>
+</body>
+</html>

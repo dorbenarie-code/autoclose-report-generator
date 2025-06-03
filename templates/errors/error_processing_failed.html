@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Processing Error</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <!-- Bootstrap CSS -->
+  <link
+    href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+    rel="stylesheet"
+  />
+  <!-- Bootstrap Icons -->
+  <link
+    href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css"
+    rel="stylesheet"
+  />
+
+  <style>
+    /* Base Styles */
+    body {
+      background-color: #eef1f5;
+      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      color: #343a40;
+    }
+
+    /* Card Container */
+    .card {
+      border: none;
+      border-radius: 0.75rem;
+      max-width: 600px;
+      margin: 80px auto;
+    }
+
+    /* Header */
+    .card-header {
+      background-color: #ffc107;
+      color: #343a40;
+      border-top-left-radius: 0.75rem;
+      border-top-right-radius: 0.75rem;
+      font-size: 1.5rem;
+    }
+    .error-icon {
+      font-size: 2.5rem;
+      margin-right: 0.5rem;
+      vertical-align: middle;
+      color: #dc3545;
+    }
+
+    /* Body Text */
+    .lead {
+      font-size: 1.15rem;
+      font-weight: 500;
+      color: #495057;
+    }
+
+    /* Button */
+    .btn {
+      margin: 5px;
+    }
+
+    /* Responsive Centering */
+    .vh-100 {
+      height: 100vh !important;
+    }
+  </style>
+</head>
+<body>
+  <div
+    class="container d-flex flex-column justify-content-center align-items-center vh-100 text-center"
+  >
+    <div
+      class="card shadow-sm"
+      role="alert"
+      aria-labelledby="error-heading"
+      aria-live="assertive"
+    >
+      <!-- Header -->
+      <div
+        class="card-header d-flex align-items-center justify-content-center gap-2"
+      >
+        <i class="bi bi-exclamation-triangle-fill error-icon" aria-hidden="true"></i>
+        Processing Error
+      </div>
+
+      <!-- Body -->
+      <div class="card-body px-4">
+        {% if user_name %}
+          <p class="lead mb-2">Hello, <strong>{{ user_name }}</strong> 👋</p>
+        {% endif %}
+        <p class="lead" id="error-message">
+          Sorry, we couldn't process your report.<br>
+          {% if message %}{{ message }}{% else %}Please check your file and try again. If the problem persists, contact our support team.{% endif %}
+        </p>
+        <div class="mt-4">
+          <a
+            href="{{ url_for('index') }}"
+            class="btn btn-outline-primary"
+            role="button"
+            aria-label="Back to Home"
+          >
+            <i class="bi bi-arrow-left-circle" aria-hidden="true"></i>
+            Back to Upload Form
+          </a>
+          <a
+            href="mailto:support@autoclose.com"
+            class="btn btn-outline-danger"
+            role="button"
+            aria-label="Contact Support"
+          >
+            <i class="bi bi-envelope-fill" aria-hidden="true"></i>
+            Contact Support
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bootstrap JS Bundle -->
+  <script
+    src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"
+  ></script>
+</body>
+</html>

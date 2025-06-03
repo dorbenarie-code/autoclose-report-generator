@@ -1,0 +1,11 @@
+services:
+  - type: web
+    name: autoclose
+    env: python
+    buildCommand: ""
+    startCommand: "gunicorn app:app"
+    plan: free
+    region: frankfurt
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.10 

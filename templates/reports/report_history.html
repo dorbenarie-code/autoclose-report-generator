@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Report History</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <!-- Bootstrap CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+  <style>
+    body { background: #f8f9fa; }
+    .table-container { background: #fff; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.07); margin-top: 32px; }
+    .badge-client { background: #0d6efd; }
+    .badge-monthly { background: #198754; }
+    .download-link { font-weight: 500; }
+    .no-reports { color: #888; margin-top: 40px; font-size: 1.1rem; }
+    .icon-col { width: 36px; text-align: center; }
+    .table thead th { vertical-align: middle; }
+    .table tbody td { vertical-align: middle; }
+    .count-badge { font-size: 1rem; vertical-align: middle; margin-left: 8px; }
+  </style>
+</head>
+<body>
+  <div class="container py-4">
+    <div class="d-flex align-items-center mb-4">
+      <h2 class="mb-0"><i class="bi bi-folder2-open"></i> Report History</h2>
+      {% if report_files %}
+        <span class="badge bg-info count-badge">{{ report_files|length }} reports</span>
+      {% endif %}
+    </div>
+
+    <!-- Filter Form -->
+    <form method="GET" action="{{ url_for('history_reports.report_history') }}" class="card p-3 mb-4">
+      <div class="row g-3 align-items-end">
+        <div class="col-md-3">
+          <label for="start" class="form-label fw-semibold">Start Date</label>
+          <div class="input-group">
+            <span class="input-group-text"><i class="bi bi-calendar-event"></i></span>
+            <input
+              type="date"
+              class="form-control"
+              name="start"
+              id="start"
+              value="{{ request.args.get('start', '') }}"
+              aria-label="Filter by start date"
+            >
+          </div>
+        </div>
+
+        <div class="col-md-3">
+          <label for="end" class="form-label fw-semibold">End Date</label>
+          <div class="input-group">
+            <span class="input-group-text"><i class="bi bi-calendar-event"></i></span>
+            <input
+              type="date"
+              class="form-control"
+              name="end"
+              id="end"
+              value="{{ request.args.get('end', '') }}"
+              aria-label="Filter by end date"
+            >
+          </div>
+        </div>
+
+        <div class="col-md-2">
+          <label for="type" class="form-label fw-semibold">Report Type</label>
+          <select class="form-select" name="type" id="type" aria-label="Filter by report type">
+            <option value="" {% if not request.args.get('type') %}selected{% endif %}>All Types</option>
+            <option value="Client Report" {% if request.args.get('type') == 'Client Report' %}selected{% endif %}>Client Report</option>
+            <option value="Monthly Summary" {% if request.args.get('type') == 'Monthly Summary' %}selected{% endif %}>Monthly Summary</option>
+          </select>
+        </div>
+
+        <div class="col-md-2">
+          <label for="search" class="form-label fw-semibold">Free Search</label>
+          <input
+            type="text"
+            class="form-control"
+            name="search"
+            id="search"
+            placeholder="Any text..."
+            value="{{ request.args.get('search', '') }}"
+            aria-label="Free text search"
+          >
+        </div>
+
+        <div class="col-md-2">
+          <label for="tech" class="form-label fw-semibold">Technician</label>
+          <div class="input-group">
+            <span class="input-group-text"><i class="bi bi-person-badge"></i></span>
+            <input
+              type="text"
+              class="form-control"
+              name="tech"
+              id="tech"
+              placeholder="e.g. Jose"
+              value="{{ request.args.get('tech', '') }}"
+              aria-label="Filter by technician name"
+            >
+          </div>
+        </div>
+
+        <div class="col-md-1 text-end">
+          <button type="submit" class="btn btn-primary me-2 mt-4">
+            <i class="bi bi-funnel-fill"></i> Filter
+          </button>
+          <a href="{{ url_for('history_reports.report_history') }}" class="btn btn-outline-secondary mt-4">
+            <i class="bi bi-x-circle"></i> Clear
+          </a>
+        </div>
+      </div>
+    </form>
+
+    <!-- Reports Per Day Chart -->
+    <div class="card p-3 shadow-sm mt-3">
+      <h5 class="mb-3"><i class="bi bi-bar-chart"></i> Reports Per Day</h5>
+      <canvas id="reportsChart" height="100"></canvas>
+    </div>
+
+    {% if report_files %}
+    <div class="d-flex justify-content-end mb-4">
+      <a 
+        href="{{ url_for('history_reports.export_report_history') }}" 
+        class="btn btn-success btn-sm d-flex align-items-center"
+        role="button"
+        aria-label="Export full report history as CSV"
+        data-bs-toggle="tooltip"
+        title="Download entire report history as CSV"
+      >
+        <i class="bi bi-download me-1"></i>
+        Export History
+      </a>
+    </div>
+    <div class="table-container p-3">
+      <div class="table-responsive">
+        <table class="table table-hover align-middle">
+          <caption class="text-muted small">
+            Below you can view and download all generated reports. Click "Download" to save a report to your device.
+          </caption>
+          <thead class="table-light">
+            <tr>
+              <th class="icon-col"></th>
+              <th>Filename</th>
+              <th>Type</th>
+              <th>Date Created</th>
+              <th>Download</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for file in report_files %}
+            <tr>
+              <td class="icon-col">
+                {% if file.name and file.name.lower().endswith('.pdf') %}
+                  <i class="bi bi-file-earmark-pdf text-danger fs-4" title="PDF"></i>
+                {% elif file.name and file.name.lower().endswith('.csv') %}
+                  <i class="bi bi-file-earmark-spreadsheet text-success fs-4" title="CSV"></i>
+                {% elif file.name and file.name.lower().endswith('.xlsx') %}
+                  <i class="bi bi-file-earmark-excel text-success fs-4" title="Excel"></i>
+                {% elif file.name and file.name.lower().endswith('.png') %}
+                  <i class="bi bi-file-earmark-image text-primary fs-4" title="Image"></i>
+                {% else %}
+                  <i class="bi bi-file-earmark fs-4"></i>
+                {% endif %}
+              </td>
+              <td>{{ file.name or 'N/A' }}</td>
+              <td>
+                {% if file.type == "Client Report" %}
+                  <span class="badge badge-client">Client Report</span>
+                {% elif file.type == "Monthly Summary" %}
+                  <span class="badge badge-monthly">Monthly Summary</span>
+                {% else %}
+                  <span class="badge bg-secondary">{{ file.type or 'Other' }}</span>
+                {% endif %}
+              </td>
+              <td>
+                {% if file.date %}
+                  {# נסה לפרמט תאריך ל-YYYY-MM-DD HH:MM #}
+                  {% if file.date|length > 10 %}
+                    {{ file.date[:16].replace('T', ' ') }}
+                  {% else %}
+                    {{ file.date }}
+                  {% endif %}
+                {% else %}
+                  N/A
+                {% endif %}
+              </td>
+              <td>
+                <a class="btn btn-outline-primary btn-sm download-link"
+                   href="{{ url_for('download_report', filename=file.path) }}"
+                   download
+                   aria-label="Download {{ file.name }}"
+                   data-bs-toggle="tooltip" title="Download {{ file.name }}">
+                  <i class="bi bi-download"></i> Download
+                </a>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+    {% else %}
+      <p class="no-reports text-center"><i class="bi bi-info-circle"></i> No reports found.</p>
+    {% endif %}
+  </div>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    // Enable Bootstrap tooltips
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+      return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  {% if chart_labels and chart_labels|length > 0 %}
+  <script>
+    const chartLabels = JSON.parse('{{ chart_labels|tojson|safe }}');
+    const chartValues = JSON.parse('{{ chart_values|tojson|safe }}');
+    const ctx = document.getElementById('reportsChart');
+    if (ctx) {
+      new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: chartLabels,
+          datasets: [{
+            label: 'Reports Generated',
+            data: chartValues,
+            backgroundColor: '#0d6efd'
+          }]
+        },
+        options: {
+          responsive: true,
+          plugins: {
+            legend: { display: false },
+            tooltip: { mode: 'index', intersect: false }
+          },
+          scales: {
+            x: { title: { display: true, text: 'Date' } },
+            y: { title: { display: true, text: 'Count' }, beginAtZero: true }
+          }
+        }
+      });
+    }
+  </script>
+  {% endif %}
+</body>
+</html>

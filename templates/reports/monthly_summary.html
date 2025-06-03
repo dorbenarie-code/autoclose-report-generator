@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Monthly Summary Report</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      background: #f8f9fa;
+      padding: 0;
+      margin: 0;
+      color: #222;
+    }
+    .container {
+      max-width: 1100px;
+      margin: 40px auto 30px auto;
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 2px 16px rgba(0,0,0,0.07);
+      padding: 40px 32px 32px 32px;
+    }
+    .header {
+      text-align: center;
+      margin-bottom: 18px;
+    }
+    .header h1 {
+      color: #007bff;
+      font-size: 2.2rem;
+      margin-bottom: 0.2em;
+      letter-spacing: 1px;
+    }
+    .header .company {
+      color: #444;
+      font-size: 1.1rem;
+      margin-bottom: 0.5em;
+      font-weight: 500;
+    }
+    .subtitle {
+      text-align: center;
+      color: #555;
+      margin-bottom: 32px;
+      font-size: 1.08rem;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+      font-size: 1rem;
+      background: #fff;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.03);
+    }
+    th, td {
+      padding: 10px 12px;
+      border-bottom: 1px solid #e9ecef;
+    }
+    th {
+      background-color: #f1f3f6;
+      color: #007bff;
+      font-weight: 600;
+      text-align: left;
+      border-top: 2px solid #dee2e6;
+    }
+    tr:last-child td {
+      border-bottom: none;
+    }
+    tfoot td {
+      font-weight: bold;
+      background: #f8fafc;
+      color: #222;
+      border-top: 2px solid #007bff;
+      font-size: 1.08em;
+    }
+    .totals-label {
+      color: #007bff;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+    }
+    .footer-note {
+      margin-top: 40px;
+      text-align: center;
+      color: #888;
+      font-size: 0.98rem;
+    }
+    @media (max-width: 900px) {
+      .container { padding: 18px 2vw; }
+      table, th, td { font-size: 0.97rem; }
+    }
+    @media (max-width: 600px) {
+      .container { padding: 6px 0.5vw; }
+      table, th, td { font-size: 0.93rem; }
+      .header h1 { font-size: 1.3rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <div class="company">PRO ON CALL SERVICES INC</div>
+      <h1>Monthly Summary Report</h1>
+    </div>
+    <div class="subtitle">
+      Period: <strong>{{ start_date }}</strong> to <strong>{{ end_date }}</strong><br/>
+      Generated: {{ now.strftime('%Y-%m-%d %H:%M') }}
+    </div>
+
+    <table>
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Date</th>
+          <th>Job ID</th>
+          <th>Technician</th>
+          <th>Customer</th>
+          <th>Job Type</th>
+          <th>Vehicle</th>
+          <th>Total</th>
+          <th>Parts</th>
+          <th>Cash</th>
+          <th>Credit</th>
+          <th>Profit</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for rec in records %}
+        <tr>
+          <td>{{ loop.index }}</td>
+          <td>{{ rec.date or 'N/A' }}</td>
+          <td>{{ rec.job_id or 'N/A' }}</td>
+          <td>{{ rec.tech or 'N/A' }}</td>
+          <td>{{ rec.customer_name or 'N/A' }}</td>
+          <td>{{ rec.job_type or 'N/A' }}</td>
+          <td>{{ rec.vehicle or 'N/A' }}</td>
+          <td>${{ rec.total or '0.00' }}</td>
+          <td>${{ rec.parts or '0.00' }}</td>
+          <td>${{ rec.cash or '0.00' }}</td>
+          <td>${{ rec.credit or '0.00' }}</td>
+          <td>${{ rec.tech_profit or '0.00' }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+      <tfoot>
+        <tr>
+          <td colspan="7" class="totals-label">Totals</td>
+          <td>${{ records|sum(attribute='total') if records else '0.00' }}</td>
+          <td>${{ records|sum(attribute='parts') if records else '0.00' }}</td>
+          <td>${{ records|sum(attribute='cash') if records else '0.00' }}</td>
+          <td>${{ records|sum(attribute='credit') if records else '0.00' }}</td>
+          <td>${{ records|sum(attribute='tech_profit') if records else '0.00' }}</td>
+        </tr>
+      </tfoot>
+    </table>
+
+    <div class="footer-note">
+      This summary was generated automatically by PRO ON CALL SERVICES INC.<br/>
+      For questions or support, contact us at <a href="mailto:support@prooncall.com">support@prooncall.com</a>
+    </div>
+  </div>
+</body>
+</html> 
