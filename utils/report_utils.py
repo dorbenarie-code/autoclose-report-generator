@@ -171,6 +171,8 @@ def generate_monthly_summary_pdf(records, start_date, end_date):
         start_str = start_date.strftime("%Y-%m-%d")
         end_str = end_date.strftime("%Y-%m-%d")
         output_path = f"static/monthly_reports/monthly_summary_{start_str}_{end_str}.pdf"
+        output_dir = os.path.dirname(output_path)
+        os.makedirs(output_dir, exist_ok=True)
 
         rendered_html = template.render(
             records=records,
@@ -180,7 +182,7 @@ def generate_monthly_summary_pdf(records, start_date, end_date):
             tech_bar_chart=tech_bar_chart,
             now=datetime.now()
         )
-        HTML(string=rendered_html).write_pdf(output_path)
+        HTML(string=rendered_html, base_url=os.getcwd()).write_pdf(output_path)
         logging.info(f"✅ דוח חודשי שמור בהצלחה ב: {output_path}")
     except Exception as e:
         logging.error(f"❌ שגיאה ביצירת דוח חודשי: {e}", exc_info=True)
@@ -199,6 +201,9 @@ def create_pie_chart(records):
     buffer.seek(0)
     encoded = base64.b64encode(buffer.read()).decode('utf-8')
     plt.close()
+    # Add padding fix for Base64 if needed
+    if len(encoded) % 4:
+        encoded += '=' * (4 - len(encoded) % 4)
     return f"data:image/png;base64,{encoded}"
 
 def create_technician_bar_chart(records):
@@ -230,6 +235,9 @@ def create_technician_bar_chart(records):
         buffer.seek(0)
         chart_base64 = base64.b64encode(buffer.getvalue()).decode('utf-8')
         buffer.close()
+        # Add padding fix for Base64 if needed
+        if len(chart_base64) % 4:
+            chart_base64 += '=' * (4 - len(chart_base64) % 4)
         return f"data:image/png;base64,{chart_base64}"
     except ValueError as ve:
         logging.error(f"❌ create_technician_bar_chart: נתוני טכנאי לא תקינים - {ve}")
