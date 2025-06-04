@@ -83,10 +83,9 @@
 
   <div class="section">
     {% if signature_path %}
-      <p style="margin-top: 40px;"><strong>Signature:</strong></p>
-      <img src="/{{ signature_path }}" alt="Technician Signature" style="max-width: 200px; height: auto;">
+      <img src="{{ signature_path }}" alt="Signature" width="160" />
     {% else %}
-      <p style="margin-top: 40px;"><strong>Signature:</strong> ________________________</p>
+      <p><i>No signature available</i></p>
     {% endif %}
   </div>
 </body>
