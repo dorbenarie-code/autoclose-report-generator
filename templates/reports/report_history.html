@@ -117,7 +117,7 @@
       <canvas id="reportsChart" height="100"></canvas>
     </div>
 
-    {% if report_files %}
+  {% if report_files %}
     <div class="d-flex justify-content-end mb-4">
       <a 
         href="{{ url_for('history_reports.export_report_history') }}" 
@@ -136,19 +136,19 @@
         <table class="table table-hover align-middle">
           <caption class="text-muted small">
             Below you can view and download all generated reports. Click "Download" to save a report to your device.
-          </caption>
+      </caption>
           <thead class="table-light">
-            <tr>
+        <tr>
               <th class="icon-col"></th>
               <th>Filename</th>
               <th>Type</th>
               <th>Date Created</th>
               <th>Download</th>
-            </tr>
-          </thead>
-          <tbody>
-            {% for file in report_files %}
-            <tr>
+        </tr>
+      </thead>
+      <tbody>
+        {% for file in report_files %}
+        <tr>
               <td class="icon-col">
                 {% if file.name and file.name.lower().endswith('.pdf') %}
                   <i class="bi bi-file-earmark-pdf text-danger fs-4" title="PDF"></i>
@@ -163,9 +163,9 @@
                 {% endif %}
               </td>
               <td>{{ file.name or 'N/A' }}</td>
-              <td>
-                {% if file.type == "Client Report" %}
-                  <span class="badge badge-client">Client Report</span>
+          <td>
+            {% if file.type == "Client Report" %}
+              <span class="badge badge-client">Client Report</span>
                 {% elif file.type == "Monthly Summary" %}
                   <span class="badge badge-monthly">Monthly Summary</span>
                 {% else %}
@@ -180,26 +180,26 @@
                   {% else %}
                     {{ file.date }}
                   {% endif %}
-                {% else %}
+            {% else %}
                   N/A
-                {% endif %}
-              </td>
-              <td>
+            {% endif %}
+          </td>
+          <td>
                 <a class="btn btn-outline-primary btn-sm download-link"
-                   href="{{ url_for('download_report', filename=file.path) }}"
-                   download
+              href="{{ url_for('download_report', filename=file.path) }}" 
+              download
                    aria-label="Download {{ file.name }}"
                    data-bs-toggle="tooltip" title="Download {{ file.name }}">
                   <i class="bi bi-download"></i> Download
-                </a>
-              </td>
-            </tr>
-            {% endfor %}
-          </tbody>
-        </table>
+            </a>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
       </div>
-    </div>
-    {% else %}
+  </div>
+  {% else %}
       <p class="no-reports text-center"><i class="bi bi-info-circle"></i> No reports found.</p>
     {% endif %}
   </div>

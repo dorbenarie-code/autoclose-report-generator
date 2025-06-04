@@ -101,13 +101,13 @@
       <div class="col-md-10 col-lg-8">
         <div class="card p-4">
           <!-- Flash Messages -->
-          {% with messages = get_flashed_messages() %}
-            {% if messages %}
+            {% with messages = get_flashed_messages() %}
+              {% if messages %}
               <div class="alert alert-info mt-3 text-center">
-                {{ messages[0] }}
-              </div>
-            {% endif %}
-          {% endwith %}
+                  {{ messages[0] }}
+                </div>
+              {% endif %}
+            {% endwith %}
 
           <!-- Form -->
           <form id="uploadForm" method="POST" action="/upload" enctype="multipart/form-data" novalidate>
@@ -120,10 +120,10 @@
 
             <!-- Step 2 -->
             <h5 class="text-muted mt-4 mb-3"><i class="bi bi-chat-left-text me-2"></i>Step 2 – Or Paste Raw Text</h5>
-            <div class="mb-4">
+              <div class="mb-4">
               <label for="free_text" class="form-label">Raw Text</label>
               <textarea class="form-control" name="free_text" id="free_text" rows="6"></textarea>
-            </div>
+                </div>
 
             <!-- Step 3 -->
             <h5 class="text-muted mt-4 mb-3"><i class="bi bi-calendar-range me-2"></i>Step 3 – Select Date Range</h5>
@@ -135,8 +135,8 @@
               <div class="col-md-6">
                 <label for="end_date" class="form-label">End Date</label>
                 <input type="date" class="form-control" id="end_date" name="end_date" required />
-              </div>
-            </div>
+                  </div>
+                </div>
 
             <!-- Step 4 -->
             <h5 class="text-muted mt-4 mb-3"><i class="bi bi-file-earmark-bar-graph me-2"></i>Step 4 – Select Report Type</h5>
@@ -144,16 +144,16 @@
               <div class="form-check">
                 <input class="form-check-input" type="checkbox" id="personal" name="report_type" value="personal" checked />
                 <label class="form-check-label" for="personal">Personal PDFs</label>
-              </div>
+                  </div>
               <div class="form-check">
                 <input class="form-check-input" type="checkbox" id="monthly" name="report_type" value="monthly" />
                 <label class="form-check-label" for="monthly">Monthly Summary</label>
               </div>
             </fieldset>
 
-            <!-- Submit Button -->
+              <!-- Submit Button -->
             <h5 class="text-muted mt-4 mb-3"><i class="bi bi-rocket-takeoff me-2"></i>Step 5 – Generate</h5>
-            <div class="d-grid">
+              <div class="d-grid">
               <button type="button" id="resetBtn" class="btn btn-outline-secondary">
                 <i class="bi bi-arrow-counterclockwise me-2"></i>Reset Form
               </button>
@@ -165,9 +165,9 @@
                   role="status"
                   style="display: none;"
                 ></span>
-              </button>
-            </div>
-          </form>
+                </button>
+              </div>
+            </form>
 
           <!-- Footer -->
           <div class="card-footer text-center mt-4">
@@ -186,6 +186,20 @@
         <div class="text-center mt-5 text-muted small" style="font-weight: 500;">
           Designed by <strong>Dor Ben Arie</strong> · <span style="color:#007b8a;">Smart. Sharp. Seamless.</span>
         </div>
+
+        <!-- הצגת דוחות קיימים -->
+        {% if file_list %}
+        <div class="card mt-4">
+          <div class="card-header bg-info text-white">
+            <i class="bi bi-folder2-open me-2"></i>Existing Reports
+          </div>
+          <div class="card-body">
+            {% for filename in file_list %}
+              <a href="{{ url_for('download_file', filename=filename) }}" class="d-block mb-2">{{ filename }}</a>
+            {% endfor %}
+          </div>
+        </div>
+        {% endif %}
       </div>
     </div>
   </div>

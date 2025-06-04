@@ -170,7 +170,7 @@ def generate_monthly_summary_pdf(records, start_date, end_date):
         # 🧠 תרגום תאריכים למחרוזות ליצירת שם קובץ
         start_str = start_date.strftime("%Y-%m-%d")
         end_str = end_date.strftime("%Y-%m-%d")
-        output_path = f"output/monthly_reports/monthly_summary_{start_str}_{end_str}.pdf"
+        output_path = f"static/monthly_reports/monthly_summary_{start_str}_{end_str}.pdf"
 
         rendered_html = template.render(
             records=records,

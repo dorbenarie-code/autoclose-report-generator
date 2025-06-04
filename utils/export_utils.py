@@ -5,7 +5,7 @@ from datetime import date, datetime
 
 import pandas as pd
 
-def export_monthly_summary_csv(records: pd.DataFrame, start_date, end_date, output_folder: str = "output/monthly_reports") -> str:
+def export_monthly_summary_csv(records: pd.DataFrame, start_date, end_date, output_folder: str = "static/monthly_reports") -> str:
     """
     מייצרת קובץ CSV של רשומות שירות עבור טווח תאריכים נתון ושומרת אותו בתיקיית reports החודשיים.
 
@@ -13,7 +13,7 @@ def export_monthly_summary_csv(records: pd.DataFrame, start_date, end_date, outp
         records (pd.DataFrame): DataFrame מסונן של רשומות שירות.
         start_date (str | date | datetime): תאריך תחילת התקופה (מחרוזת או אובייקט date/datetime).
         end_date (str | date | datetime): תאריך סיום התקופה (מחרוזת או אובייקט date/datetime).
-        output_folder (str): נתיב לתיקייה שבה ישמר הקובץ (ברירת מחדל: "output/monthly_reports").
+        output_folder (str): נתיב לתיקייה שבה ישמר הקובץ (ברירת מחדל: "static/monthly_reports").
 
     Returns:
         str: הנתיב המלא של קובץ ה-CSV שנוצר.

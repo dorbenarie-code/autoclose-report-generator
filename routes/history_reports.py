@@ -13,8 +13,8 @@ history_bp = Blueprint("history_reports", __name__)
 
 # הגדרת תיקיות הדוחות הקיימות
 REPORT_DIRS = {
-    "Client Report": Path("output/client_reports"),
-    "Monthly Summary": Path("output/monthly_reports")
+    "Client Report": Path("static/client_reports"),
+    "Monthly Summary": Path("static/monthly_reports")
 }
 
 @history_bp.route("/reports/history")

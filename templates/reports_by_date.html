@@ -134,15 +134,15 @@
             <td>
               {% if job.status %}
                 <span class="badge bg-info text-dark">{{ job.status }}</span>
-              {% else %}
+            {% else %}
                 <span class="badge bg-secondary">-</span>
-              {% endif %}
+            {% endif %}
             </td>
           </tr>
           {% endfor %}
         </tbody>
       </table>
-    </div>
+          </div>
   {% else %}
     <div class="alert alert-warning text-center no-files" role="alert">
       <i class="bi bi-exclamation-triangle-fill"></i>

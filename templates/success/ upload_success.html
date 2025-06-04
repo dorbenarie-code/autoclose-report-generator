@@ -10,22 +10,22 @@
     <div class="text-center mb-4">
       <h2 class="text-success">✅ Reports Generated Successfully</h2>
       <p class="lead">Hello, <strong>{{ user_name or 'User' }}</strong>. Your reports are ready to download:</p>
-    </div>
+      </div>
 
     <ul class="list-group">
       {% if generated_filename is string %}
       <li class="list-group-item d-flex justify-content-between align-items-center">
         {{ generated_filename }}
-        <a href="{{ url_for('download_report', filename=generated_filename) }}" class="btn btn-sm btn-outline-primary">Download</a>
+        <a href="{{ url_for('download_file', filename=generated_filename) }}" class="btn btn-sm btn-outline-primary">Download</a>
       </li>
       {% elif generated_filename is iterable %}
       {% for filename in generated_filename %}
       <li class="list-group-item d-flex justify-content-between align-items-center">
         {{ filename }}
-        <a href="{{ url_for('download_report', filename=filename) }}" class="btn btn-sm btn-outline-primary">Download</a>
+        <a href="{{ url_for('download_file', filename=filename) }}" class="btn btn-sm btn-outline-primary">Download</a>
       </li>
       {% endfor %}
-      {% endif %}
+        {% endif %}
     </ul>
 
     <div class="text-center mt-4">

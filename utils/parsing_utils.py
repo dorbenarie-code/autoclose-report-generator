@@ -167,8 +167,15 @@ def process_uploaded_file(file_path: str, start_date: str, end_date: str) -> lis
     records = []
 
     # Parse date range
-    start = datetime.strptime(start_date, "%Y-%m-%d").date()
-    end = datetime.strptime(end_date, "%Y-%m-%d").date()
+    if isinstance(start_date, str):
+        start = datetime.strptime(start_date, "%Y-%m-%d").date()
+    else:
+        start = start_date
+
+    if isinstance(end_date, str):
+        end = datetime.strptime(end_date, "%Y-%m-%d").date()
+    else:
+        end = end_date
 
     if ext == 'txt':
         with open(file_path, 'r') as f:
