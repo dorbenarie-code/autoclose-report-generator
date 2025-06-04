@@ -19,3 +19,5 @@ yagmail
 # Environment variable management
 python-dotenv>=0.21.0,<0.22
 # Trigger update
+
+gunicorn>=20.0.0
