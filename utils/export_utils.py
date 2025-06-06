@@ -2,10 +2,17 @@ import os
 import re
 import logging
 from datetime import date, datetime
+from typing import Union
 
 import pandas as pd
 
-def export_monthly_summary_csv(records: pd.DataFrame, start_date, end_date, output_folder: str = "static/monthly_reports") -> str:
+
+def export_monthly_summary_csv(
+    records: pd.DataFrame,
+    start_date: Union[str, date, datetime],
+    end_date: Union[str, date, datetime],
+    output_folder: str = "static/monthly_reports",
+) -> str:
     """
     מייצרת קובץ CSV של רשומות שירות עבור טווח תאריכים נתון ושומרת אותו בתיקיית reports החודשיים.
 
@@ -24,14 +31,16 @@ def export_monthly_summary_csv(records: pd.DataFrame, start_date, end_date, outp
     """
     # אימות סוג הנתונים
     if not isinstance(records, pd.DataFrame):
-        logging.error("export_monthly_summary_csv: 'records' חייב להיות pandas DataFrame.")
+        logging.error(
+            "export_monthly_summary_csv: 'records' חייב להיות pandas DataFrame."
+        )
         raise ValueError("'records' חייב להיות pandas DataFrame.")
     if records.empty:
         logging.error("export_monthly_summary_csv: DataFrame ריק, אין נתונים לשמירה.")
         raise ValueError("אין נתונים לשמירה (DataFrame ריק).")
 
     # המרת תאריכים למחרוזת אחידה (YYYY-MM-DD)
-    def _format_date(obj):
+    def _format_date(obj: Union[str, date, datetime]) -> str:
         if isinstance(obj, (date, datetime)):
             return obj.strftime("%Y-%m-%d")
         return str(obj)
@@ -39,14 +48,19 @@ def export_monthly_summary_csv(records: pd.DataFrame, start_date, end_date, outp
     start_str = _format_date(start_date)
     end_str = _format_date(end_date)
 
-    print(f"START: {start_date} (type: {type(start_date)}), END: {end_date} (type: {type(end_date)})")
+    print(
+        f"START: {start_date} (type: {type(start_date)}), END: {end_date} (type: {type(end_date)})"
+    )
     print(f"start_str: {start_str}, end_str: {end_str}")
 
     # יצירת תיקיית היעד במידת הצורך
     try:
         os.makedirs(output_folder, exist_ok=True)
     except Exception as e:
-        logging.error(f"export_monthly_summary_csv: לא ניתן ליצור את התיקייה '{output_folder}' - {e}", exc_info=True)
+        logging.error(
+            f"export_monthly_summary_csv: לא ניתן ליצור את התיקייה '{output_folder}' - {e}",
+            exc_info=True,
+        )
         raise RuntimeError(f"לא ניתן ליצור את התיקייה '{output_folder}'.") from e
 
     # בניית שם הקובץ תוך הסרת תווים בלתי רצויים
@@ -60,7 +74,26 @@ def export_monthly_summary_csv(records: pd.DataFrame, start_date, end_date, outp
         records.to_csv(output_path, index=False)
         logging.info(f"✅ קובץ CSV שמור ב: {output_path}")
     except Exception as e:
-        logging.error(f"export_monthly_summary_csv: שגיאה בשמירת הקובץ ל־'{output_path}' - {e}", exc_info=True)
+        logging.error(
+            f"export_monthly_summary_csv: שגיאה בשמירת הקובץ ל־'{output_path}' - {e}",
+            exc_info=True,
+        )
         raise RuntimeError(f"שגיאה בשמירת קובץ ה-CSV: {e}") from e
 
-    return output_path 
+    return output_path
+    # מחליף כל תו שאינו אות, ספרה, קו תחתון או מקף ב־מקף
+    safe_filename = re.sub(r"[^\w\-]+", "-", raw_filename)
+    output_path = os.path.join(output_folder, safe_filename)
+
+    # שמירת ה-CSV
+    try:
+        records.to_csv(output_path, index=False)
+        logging.info(f"✅ קובץ CSV שמור ב: {output_path}")
+    except Exception as e:
+        logging.error(
+            f"export_monthly_summary_csv: שגיאה בשמירת הקובץ ל־'{output_path}' - {e}",
+            exc_info=True,
+        )
+        raise RuntimeError(f"שגיאה בשמירת קובץ ה-CSV: {e}") from e
+
+    return output_path

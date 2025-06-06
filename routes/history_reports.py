@@ -1,6 +1,5 @@
 # routes/history_reports.py
 
-import os
 import logging
 from pathlib import Path
 from datetime import datetime
@@ -14,11 +13,12 @@ history_bp = Blueprint("history_reports", __name__)
 # הגדרת תיקיות הדוחות הקיימות
 REPORT_DIRS = {
     "Client Report": Path("static/client_reports"),
-    "Monthly Summary": Path("static/monthly_reports")
+    "Monthly Summary": Path("static/monthly_reports"),
 }
 
+
 @history_bp.route("/reports/history")
-def report_history():
+def report_history() -> str:
     """
     מציג את היסטוריית הדוחות ונותן אפשרות לסנן לפי טווח תאריכים ושם טכנאי.
     """
@@ -60,7 +60,9 @@ def report_history():
                 created_date = created_dt.date()
                 created_str = created_dt.strftime("%Y-%m-%d %H:%M")
             except Exception as e:
-                logging.error(f"Error getting creation time for {entry}: {e}", exc_info=True)
+                logging.error(
+                    f"Error getting creation time for {entry}: {e}", exc_info=True
+                )
                 created_str = "Unknown"
                 created_date = None
 
@@ -86,18 +88,22 @@ def report_history():
                 if search_filter not in search_target:
                     continue
 
-            report_files.append({
-                "name": entry.name,
-                "type": report_type,
-                "date": created_str,
-                "path": f"{folder_path.name}/{entry.name}"
-            })
+            report_files.append(
+                {
+                    "name": entry.name,
+                    "type": report_type,
+                    "date": created_str,
+                    "path": f"{folder_path.name}/{entry.name}",
+                }
+            )
 
     # מיון לפי תאריך יצירה בסדר יורד (Unknown יבוא בסוף)
-    report_files.sort(key=lambda r: r["date"] if r["date"] != "Unknown" else "", reverse=True)
+    report_files.sort(
+        key=lambda r: r["date"] if r["date"] != "Unknown" else "", reverse=True
+    )
 
     # קיבוץ לפי תאריך (YYYY-MM-DD) עבור גרף
-    chart_data = defaultdict(int)
+    chart_data: dict[str, int] = defaultdict(int)
     for file in report_files:
         date_key = file["date"][:10]  # חותך YYYY-MM-DD
         chart_data[date_key] += 1
@@ -108,11 +114,12 @@ def report_history():
         "reports/report_history.html",
         report_files=report_files,
         chart_labels=chart_labels,
-        chart_values=chart_values
+        chart_values=chart_values,
     )
 
+
 @history_bp.route("/reports/history/export")
-def export_report_history():
+def export_report_history() -> Response:
     """
     Exports the entire report history as a CSV file.
     כותרות העמודות: Filename, Type, Date Created, Relative Path.
@@ -135,7 +142,9 @@ def export_report_history():
                 created_dt = datetime.fromtimestamp(entry.stat().st_ctime)
                 created_str = created_dt.strftime("%Y-%m-%d %H:%M")
             except Exception as e:
-                logging.error(f"Error getting creation time for {entry}: {e}", exc_info=True)
+                logging.error(
+                    f"Error getting creation time for {entry}: {e}", exc_info=True
+                )
                 created_str = "Unknown"
 
             relative_path = f"{folder_path.name}/{entry.name}"
@@ -147,8 +156,6 @@ def export_report_history():
 
     response = Response(csv_content, mimetype="text/csv; charset=utf-8")
     response.headers.set(
-        "Content-Disposition",
-        "attachment",
-        filename="report_history_export.csv"
+        "Content-Disposition", "attachment", filename="report_history_export.csv"
     )
     return response

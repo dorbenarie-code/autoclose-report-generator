@@ -4,11 +4,16 @@
 import logging
 import os
 from datetime import date, datetime
-from pathlib import Path
+from typing import Optional, Any, Tuple
 
 # --- Third-party ---
 import pandas as pd
-from flask import Flask, redirect, render_template, request, send_from_directory, url_for
+from flask import (
+    Flask,
+    render_template,
+    request,
+    send_from_directory,
+)
 from werkzeug.utils import secure_filename
 
 # --- Internal Imports ---
@@ -16,14 +21,10 @@ from routes.history_reports import history_bp
 from routes.search_reports import search_bp
 from utils.export_utils import export_monthly_summary_csv
 from utils.free_text_parser import parse_free_text_block
-from utils.mail_utils import send_email_with_attachments
-from utils.ocr_utils import OCRProcessor
-from utils.parsing_utils import parse_all_jobs, process_uploaded_file
+from utils.parsing_utils import process_uploaded_file
 from utils.report_utils import (
     generate_client_pdf,
-    generate_excel_report,
     generate_monthly_summary_pdf,
-    generate_pdf_report,
 )
 from utils.routes.reports import reports_bp
 
@@ -45,26 +46,30 @@ app.register_blueprint(history_bp)
 
 # --- Logging ---
 logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s [%(levelname)s] %(name)s - %(message)s"
+    level=logging.INFO, format="%(asctime)s [%(levelname)s] %(name)s - %(message)s"
 )
 logger = logging.getLogger("AutoCloseApp")
 
+
 # --- Helper Functions ---
-def allowed_file(filename):
-    return (
-        "." in filename
-        and filename.rsplit(".", 1)[1].lower() in {ext.lstrip(".") for ext in ALLOWED_EXTENSIONS}
-    )
+def allowed_file(filename: str) -> bool:
+    return "." in filename and filename.rsplit(".", 1)[1].lower() in {
+        ext.lstrip(".") for ext in ALLOWED_EXTENSIONS
+    }
+
 
 def parse_date(date_str: str) -> date:
     return datetime.strptime(date_str, "%Y-%m-%d").date()
+
 
 def make_timestamped_filename(prefix: str, extension: str) -> str:
     ts = datetime.now().strftime("%Y%m%dT%H%M%S")
     return f"{prefix}_{ts}{extension}"
 
-def filter_records_by_date(records: list, start_date: date, end_date: date) -> list:
+
+def filter_records_by_date(
+    records: list[dict[str, Any]], start_date: date, end_date: date
+) -> list[dict[str, Any]]:
     filtered = []
     for rec in records:
         rec_date_str = rec.get("date")
@@ -78,7 +83,14 @@ def filter_records_by_date(records: list, start_date: date, end_date: date) -> l
             continue
     return filtered
 
-def create_reports(records, start_date, end_date, generate_personal, generate_monthly):
+
+def create_reports(
+    records: list[dict[str, Any]],
+    start_date: Optional[date],
+    end_date: Optional[date],
+    generate_personal: bool,
+    generate_monthly: bool,
+) -> tuple[list[str], Optional[str], Optional[str]]:
     # הגנה על פורמט תאריכים
     if isinstance(start_date, date):
         start_date_str = start_date.strftime("%Y-%m-%d")
@@ -103,7 +115,9 @@ def create_reports(records, start_date, end_date, generate_personal, generate_mo
     if generate_personal:
         for record in records:
             job_id = str(record.get("job_id", "unknown"))
-            name = str(record.get("tech", "user")).split("/")[0].strip().replace(" ", "_")
+            name = (
+                str(record.get("tech", "user")).split("/")[0].strip().replace(" ", "_")
+            )
             timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
             pdf_filename = secure_filename(f"{job_id}_{name}_{timestamp}.pdf")
             output_path = os.path.join(CLIENT_REPORTS_FOLDER, pdf_filename)
@@ -112,7 +126,7 @@ def create_reports(records, start_date, end_date, generate_personal, generate_mo
                 generated_files.append(pdf_filename)
                 logger.info(f"Generated personal PDF: {pdf_filename}")
             except Exception as e:
-                logger.error(f"PDF generation failed for {job_id}/{name}: {e}")
+                logger.error("PDF generation failed for %s/%s: %s", job_id, name, e)
 
     # דוחות חודשיים ו־CSV
     if generate_monthly and records:
@@ -120,37 +134,50 @@ def create_reports(records, start_date, end_date, generate_personal, generate_mo
         summary_name = f"monthly_summary_{start_date_str}_to_{end_date_str}"
         timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
         summary_pdf = secure_filename(f"{summary_name}_{timestamp}.pdf")
-        summary_pdf_path = os.path.join(CLIENT_REPORTS_FOLDER, summary_pdf)
         try:
-            generate_monthly_summary_pdf(records, start_date, end_date)
-            generated_files.append(summary_pdf)
-            logger.info(f"Generated monthly summary PDF: {summary_pdf}")
+            if start_date is not None and end_date is not None:
+                generate_monthly_summary_pdf(records, start_date, end_date)
+                generated_files.append(summary_pdf)
+                logger.info(f"Generated monthly summary PDF: {summary_pdf}")
+            else:
+                logger.error(
+                    "start_date or end_date is None for monthly summary PDF generation."
+                )
         except Exception as e:
-            logger.error(f"Failed to generate summary PDF: {e}")
+            logger.error("Failed to generate summary PDF: %s", e)
 
         try:
-            csv_path = export_monthly_summary_csv(df, start_date, end_date)
+            # export_monthly_summary_csv מצפה ל-str | date | datetime
+            start_csv = start_date if start_date is not None else ""
+            end_csv = end_date if end_date is not None else ""
+            csv_path = export_monthly_summary_csv(df, start_csv, end_csv)
             csv_filename = os.path.basename(csv_path) if csv_path else None
             logger.info(f"CSV saved at: {csv_path}")
         except Exception as e:
-            logger.error(f"Failed to generate summary CSV: {e}")
+            logger.error("Failed to generate summary CSV: %s", e)
 
     return generated_files, csv_path, csv_filename
 
+
 # --- Routes ---
 @app.route("/")
-def index():
+def index() -> str:
     # הצגת קבצים קיימים להורדה
     file_list = []
     try:
-        file_list = [f for f in os.listdir(CLIENT_REPORTS_FOLDER) if os.path.isfile(os.path.join(CLIENT_REPORTS_FOLDER, f))]
+        file_list = [
+            f
+            for f in os.listdir(CLIENT_REPORTS_FOLDER)
+            if os.path.isfile(os.path.join(CLIENT_REPORTS_FOLDER, f))
+        ]
         file_list.sort(reverse=True)
-    except Exception as e:
+    except Exception:
         file_list = []
     return render_template("index.html", now=datetime.now(), file_list=file_list)
 
+
 @app.route("/upload", methods=["POST"])
-def upload():
+def upload() -> str:
     file = request.files.get("file")
     free_text = request.form.get("free_text", "").strip()
     start_input = request.form.get("start_date")
@@ -166,86 +193,100 @@ def upload():
     generate_personal = "personal" in report_types
     generate_monthly = "monthly" in report_types
 
-    records = []
+    records: list[dict[str, Any]] = []
 
-    if file and allowed_file(file.filename):
-        filename = secure_filename(file.filename)
+    if file and file.filename is not None and allowed_file(str(file.filename)):
+        filename = secure_filename(str(file.filename))
         file_path = os.path.join(UPLOAD_FOLDER, filename)
         file.save(file_path)
         try:
-            records = process_uploaded_file(file_path, start_date, end_date)
+            # process_uploaded_file מצפה ל-str, לא ל-date
+            start_str = start_date.strftime("%Y-%m-%d") if start_date else ""
+            end_str = end_date.strftime("%Y-%m-%d") if end_date else ""
+            records = process_uploaded_file(file_path, start_str, end_str)
         except Exception as e:
-            logger.error(f"Failed to process file: {e}")
-            return render_template("errors/error_processing_failed.html", message=str(e))
+            logger.error("Failed to process file: %s", e)
+            return render_template(
+                "errors/error_processing_failed.html", message=str(e)
+            )
 
     elif free_text:
         try:
             records = parse_free_text_block(free_text)
-            if start_date and end_date:
+            # filter_records_by_date מצפה ל-date, לא ל-None
+            if start_date is not None and end_date is not None:
                 records = filter_records_by_date(records, start_date, end_date)
         except Exception as e:
             logger.error(f"Failed to parse free text: {e}")
-            return render_template("errors/error_processing_failed.html", message=str(e))
+            return render_template(
+                "errors/error_processing_failed.html", message=str(e)
+            )
         else:
             if not records:
                 return render_template(
                     "errors/error_processing_failed.html",
-                    message="No job records in selected date range."
+                    message="No job records in selected date range.",
                 )
 
     generated_files, csv_path, csv_filename = create_reports(
         records, start_date, end_date, generate_personal, generate_monthly
     )
 
-    name = None
+    name: Optional[str] = None
     if records:
-        name = str(records[0].get("tech", "user")).split("/")[0].strip().replace(" ", "_")
+        name = (
+            str(records[0].get("tech", "user")).split("/")[0].strip().replace(" ", "_")
+        )
 
     return render_template(
         "success/upload_success.html",
         user_name=name,
         generated_filename=(
-            generated_files[0]
-            if len(generated_files) == 1
-            else generated_files
+            generated_files[0] if len(generated_files) == 1 else generated_files
         ),
         csv_path=csv_path,
-        csv_filename=csv_filename
+        csv_filename=csv_filename,
     )
 
+
 @app.route("/success")
-def success_page():
+def success_page() -> str:
     pdf_url = request.args.get("pdf_url")
     user_name = request.args.get("user_name")
     return render_template(
-        "success/upload_success.html",
-        pdf_url=pdf_url,
-        user_name=user_name
+        "success/upload_success.html", pdf_url=pdf_url, user_name=user_name
     )
 
+
 @app.route("/download/<filename>")
-def download_file(filename):
+def download_file(filename: str) -> Any:
     return send_from_directory(CLIENT_REPORTS_FOLDER, filename)
+
 
 # --- Error Handlers ---
 @app.errorhandler(400)
-def bad_request(e):
+def bad_request(e: Exception) -> Tuple[str, int]:
     return render_template("errors/error_invalid_format.html"), 400
 
+
 @app.errorhandler(403)
-def forbidden_access(e):
+def forbidden_access(e: Exception) -> Tuple[str, int]:
     return render_template("errors/error_403.html"), 403
 
+
 @app.errorhandler(404)
-def page_not_found(e):
+def page_not_found(e: Exception) -> Tuple[str, int]:
     return render_template("errors/error_404.html"), 404
 
+
 @app.errorhandler(500)
-def internal_error(e):
+def internal_error(e: Exception) -> Tuple[str, int]:
     return render_template("errors/error_processing_failed.html"), 500
+
 
 # --- Main Entrypoint (for local dev only) ---
 if __name__ == "__main__":
     import os
+
     port = int(os.environ.get("PORT", 5000))
     app.run(debug=True, host="0.0.0.0", port=port)

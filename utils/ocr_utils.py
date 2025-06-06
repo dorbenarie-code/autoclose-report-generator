@@ -2,13 +2,14 @@
 
 import logging
 from pathlib import Path
-from typing import Optional
 
 from PIL import Image, UnidentifiedImageError
 import pytesseract
 
 # Configure module-level logger
-logging.basicConfig(level=logging.INFO, format="%(asctime)s [OCR_UTILS] %(levelname)s - %(message)s")
+logging.basicConfig(
+    level=logging.INFO, format="%(asctime)s [OCR_UTILS] %(levelname)s - %(message)s"
+)
 logger = logging.getLogger(__name__)
 
 

@@ -1,32 +1,267 @@
-{% if generated_filename is string %}
-  <div class="text-center my-4">
-    <a href="{{ url_for('download_file', filename=generated_filename) }}" class="btn btn-success btn-lg">
-      <i class="bi bi-download"></i> Download Report PDF
-    </a>
-    <div class="mt-2 text-muted small">Click to download your generated report</div>
-  </div>
-{% elif generated_filename is sequence %}
-  <div class="my-4">
-    <h5 class="mb-3 text-center">Download Your Reports</h5>
-    <ul class="list-group">
-      {% for fname in generated_filename %}
-        <li class="list-group-item d-flex align-items-center justify-content-between">
-          <span><i class="bi bi-file-earmark-pdf text-danger me-2"></i>{{ fname }}</span>
-          <a href="{{ url_for('download_file', filename=fname) }}" class="btn btn-outline-success btn-sm">
-            <i class="bi bi-download"></i> Download
-          </a>
-        </li>
-      {% endfor %}
-    </ul>
-    <div class="mt-2 text-muted small text-center">Click any file to download your report</div>
-  </div>
-{% endif %}
+<!-- Success Alert -->
+<div
+  class="alert alert-success alert-dismissible fade show text-center mt-4"
+  role="alert"
+  aria-live="polite"
+  data-testid="success-alert"
+>
+  <i class="bi bi-check-circle-fill me-2"></i>
+  Report generated successfully!
+  <button
+    type="button"
+    class="btn-close"
+    data-bs-dismiss="alert"
+    aria-label="Close"
+    tabindex="0"
+    data-testid="alert-close-button"
+  ></button>
+</div>
 
-{% if csv_filename %}
-  <div class="mt-4 text-center">
-    <h5>📊 Download Monthly CSV Summary:</h5>
-    <a href="{{ url_for('download_file', filename=csv_filename) }}" class="btn btn-success" download>
-      📥 Download CSV
+<div class="container" style="max-width: 700px; margin: 0 auto;">
+  <!-- Report Info Block -->
+  <div class="card shadow-sm mb-4" aria-label="Report Information" data-testid="report-info-block">
+    <div class="card-body text-center">
+      <h4 class="card-title mb-3" data-testid="report-info-title">
+        <i class="bi bi-file-earmark-bar-graph"></i> Report Details
+      </h4>
+      <ul class="list-unstyled mb-2" data-testid="report-info-list">
+        {% if start_date or end_date %}
+          <li data-testid="date-range">
+            <strong>Date Range:</strong> {{ start_date or '?' }} to {{ end_date or '?' }}
+          </li>
+        {% endif %}
+        {% if generated_filename is string or generated_filename is sequence %}
+          <li data-testid="file-count">
+            <strong>File(s):</strong>
+            {% if generated_filename is string %}
+              {{ generated_filename }}
+            {% else %}
+              {{ generated_filename|length }} files
+            {% endif %}
+          </li>
+        {% endif %}
+        {% if jobs_count is defined %}
+          <li data-testid="jobs-count">
+            <strong>Jobs:</strong> {{ jobs_count }}
+          </li>
+        {% endif %}
+        {% if total_amount is defined %}
+          <li data-testid="total-amount">
+            <strong>Total Amount:</strong> ${{ '%.2f'|format(total_amount) }}
+          </li>
+        {% endif %}
+      </ul>
+    </div>
+  </div>
+
+  <!-- Download & Share Block -->
+  <div class="text-center my-4" data-testid="download-share-block">
+    {% if generated_filename is string %}
+      <a
+        href="{{ url_for('download_file', filename=generated_filename) }}"
+        class="btn btn-success btn-lg me-2"
+        aria-label="Download Report PDF"
+        tabindex="0"
+        data-testid="download-pdf-button"
+      >
+        <i class="bi bi-download"></i> Download Report PDF
+      </a>
+      <button
+        class="btn btn-outline-secondary btn-lg me-2"
+        data-link="{{ url_for('download_file', filename=generated_filename, _external=True) }}"
+        onclick="copyFromAttr(this)"
+        aria-label="Copy direct download link"
+        tabindex="0"
+        data-testid="copy-link-button"
+      >
+        <i class="bi bi-clipboard"></i> Copy Link
+      </button>
+      <a
+        href="mailto:?subject=Your Report&body=Download here: {{ url_for('download_file', filename=generated_filename, _external=True) }}"
+        class="btn btn-outline-primary btn-lg"
+        aria-label="Send by Email"
+        tabindex="0"
+        data-testid="send-email-link"
+      >
+        <i class="bi bi-envelope"></i> Send by Email
+      </a>
+    {% elif generated_filename is sequence %}
+      <h5 class="mb-3 text-center" data-testid="multiple-files-title">Download Your Reports</h5>
+      <ul class="list-group mb-3" data-testid="file-list">
+        {% for fname in generated_filename %}
+          <li
+            class="list-group-item d-flex align-items-center justify-content-between"
+            data-testid="file-item-{{ loop.index0 }}"
+          >
+            <span data-testid="file-name-{{ loop.index0 }}">
+              <i class="bi bi-file-earmark-pdf text-danger me-2"></i>{{ fname }}
+            </span>
+            <div>
+              <a
+                href="{{ url_for('download_file', filename=fname) }}"
+                class="btn btn-outline-success btn-sm me-1"
+                aria-label="Download {{ fname }}"
+                tabindex="0"
+                data-testid="download-button-{{ loop.index0 }}"
+              >
+                <i class="bi bi-download"></i> Download
+              </a>
+              <button
+                class="btn btn-outline-secondary btn-sm me-1"
+                data-link="{{ url_for('download_file', filename=fname, _external=True) }}"
+                onclick="copyFromAttr(this)"
+                aria-label="Copy link for {{ fname }}"
+                tabindex="0"
+                data-testid="copy-link-button-{{ loop.index0 }}"
+              >
+                <i class="bi bi-clipboard"></i>
+              </button>
+              <a
+                href="mailto:?subject=Your Report&body=Download here: {{ url_for('download_file', filename=fname, _external=True) }}"
+                class="btn btn-outline-primary btn-sm"
+                aria-label="Send {{ fname }} by Email"
+                tabindex="0"
+                data-testid="send-email-button-{{ loop.index0 }}"
+              >
+                <i class="bi bi-envelope"></i>
+              </a>
+            </div>
+          </li>
+        {% endfor %}
+      </ul>
+      <div class="mt-2 text-muted small text-center" data-testid="multiple-files-note">
+        Click any file to download or share your report
+      </div>
+    {% endif %}
+  </div>
+
+  {% if csv_filename %}
+    <div class="mt-4 text-center" data-testid="csv-download-block">
+      <h5>📊 Download Monthly CSV Summary:</h5>
+      <a
+        href="{{ url_for('download_file', filename=csv_filename) }}"
+        class="btn btn-success"
+        download
+        aria-label="Download CSV"
+        tabindex="0"
+        data-testid="download-csv-button"
+      >
+        📥 Download CSV
+      </a>
+    </div>
+  {% endif %}
+
+  <!-- Email Form Block -->
+  <div
+    class="card shadow-sm mt-5 mb-4"
+    style="padding: 20px; border-top: 1px solid #ccc;"
+    data-testid="email-form-block"
+  >
+    <h3 class="mb-3" style="color:#007bff;" data-testid="email-form-title">
+      <i class="bi bi-envelope-paper"></i> Send Report by Email
+    </h3>
+    <form
+      method="POST"
+      action="/send-monthly-report"
+      style="max-width: 500px; margin: 0 auto;"
+      onsubmit="showSpinner()"
+      data-testid="email-form"
+    >
+      <div class="mb-3" data-testid="email-input-group">
+        <label for="email" class="form-label" data-testid="email-label">Recipient Email:</label>
+        <input
+          type="email"
+          name="email"
+          id="email"
+          placeholder="example@domain.com"
+          class="form-control"
+          required
+          aria-label="Recipient Email"
+          tabindex="0"
+          data-testid="email-input"
+        />
+      </div>
+      <input
+        type="hidden"
+        name="start_date"
+        value="{{ request.form.get('start_date') or request.args.get('start_date', '') }}"
+        data-testid="hidden-start-date"
+      >
+      <input
+        type="hidden"
+        name="end_date"
+        value="{{ request.form.get('end_date') or request.args.get('end_date', '') }}"
+        data-testid="hidden-end-date"
+      >
+      <button
+        type="submit"
+        class="btn btn-primary"
+        style="min-width: 180px;"
+        data-testid="send-email-button"
+      >
+        <span id="spinner" class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
+        <span id="send-text">📧 Send Monthly Report</span>
+      </button>
+    </form>
+  </div>
+
+  <!-- Next Actions Block -->
+  <div class="text-center mt-5 mb-4" data-testid="next-actions-block">
+    <h5 class="mb-3" data-testid="next-actions-title">What would you like to do next?</h5>
+    <a
+      href="/"
+      class="btn btn-outline-primary me-2"
+      aria-label="Back to Home"
+      tabindex="0"
+      data-testid="home-button"
+    >
+      <i class="bi bi-house"></i> Home
+    </a>
+    <a
+      href="/reports/history"
+      class="btn btn-outline-secondary me-2"
+      aria-label="View Previous Reports"
+      tabindex="0"
+      data-testid="previous-reports-button"
+    >
+      <i class="bi bi-clock-history"></i> Previous Reports
+    </a>
+    <a
+      href="/upload"
+      class="btn btn-outline-success"
+      aria-label="Upload Another Report"
+      tabindex="0"
+      data-testid="upload-another-button"
+    >
+      <i class="bi bi-upload"></i> Upload Another
     </a>
   </div>
-{% endif %} 
+</div>
+
+<!-- Copy Link JS & Spinner -->
+<script>
+function copyFromAttr(el) {
+  const link = el.getAttribute("data-link");
+  navigator.clipboard.writeText(link).then(function() {
+    let alert = document.createElement('div');
+    alert.className = 'alert alert-info position-fixed top-0 start-50 translate-middle-x mt-3';
+    alert.style.zIndex = 9999;
+    alert.innerHTML = '<i class="bi bi-clipboard-check"></i> Link copied!';
+    document.body.appendChild(alert);
+    setTimeout(function() { alert.remove(); }, 1500);
+  });
+}
+
+function showSpinner() {
+  document.getElementById('spinner').classList.remove('d-none');
+  document.getElementById('send-text').textContent = 'Sending...';
+}
+</script>
+
+<!-- Bootstrap Icons CSS -->
+<!-- If you use CSP or block external CDNs, host this file locally under /static -->
+<link
+  rel="stylesheet"
+  href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css"
+  data-testid="bootstrap-icons-cdn-link"
+/>

@@ -5,10 +5,9 @@ import logging
 import smtplib
 import yagmail
 from pathlib import Path
-from typing import List
 from email.message import EmailMessage
 from dotenv import load_dotenv
-from datetime import datetime, date
+from datetime import date
 
 # Load environment variables
 load_dotenv()
@@ -31,40 +30,30 @@ handler.setFormatter(formatter)
 logger.addHandler(handler)
 
 
-def send_email_with_attachments(attachments: List[str]) -> None:
+def send_email_with_attachments(
+    to_address: str, subject: str, body: str, attachments: list[str]
+) -> bool:
     """
     Send an email with the specified attachments via Gmail SMTP.
-
-    Steps:
-      1. Verify that required environment variables exist.
-      2. Format the email subject and body by replacing ${DATE} placeholders.
-      3. Create an EmailMessage, set headers, and attach each file.
-      4. Connect to Gmail SMTP over SSL, authenticate, and send.
-
     Args:
-        attachments (List[str]): List of file paths to attach.
-
-    Raises:
-        EnvironmentError: If any required email credential is missing.
-        FileNotFoundError: If any attachment path is invalid.
-        smtplib.SMTPException: If sending fails at the SMTP level.
+        to_address (str): Recipient email address.
+        subject (str): Email subject.
+        body (str): Email body.
+        attachments (list[str]): List of file paths to attach.
+    Returns:
+        bool: True if sent successfully, False otherwise.
     """
     # Validate environment variables
-    if not all([EMAIL_SENDER, EMAIL_PASSWORD, EMAIL_RECEIVER]):
-        msg = "Missing email configuration in .env"
-        logger.error(msg)
-        raise EnvironmentError(msg)
-
-    # Prepare subject and body with current date
-    date_str = datetime.now().strftime("%Y-%m-%d")
-    subject = EMAIL_SUBJECT_TEMPLATE.replace("${DATE}", date_str)
-    body = EMAIL_BODY_TEMPLATE.replace("${DATE}", date_str)
+    if not all([EMAIL_SENDER, EMAIL_PASSWORD, to_address]):
+        error_msg = "Missing email configuration in .env or to_address"
+        logger.error(error_msg)
+        return False
 
     # Initialize the email message
-    msg = EmailMessage()
+    msg: EmailMessage = EmailMessage()
     msg["Subject"] = subject
-    msg["From"] = EMAIL_SENDER
-    msg["To"] = EMAIL_RECEIVER
+    msg["From"] = EMAIL_SENDER if EMAIL_SENDER is not None else ""
+    msg["To"] = to_address if to_address is not None else ""
     msg.set_content(body)
 
     # Attach files
@@ -73,8 +62,7 @@ def send_email_with_attachments(attachments: List[str]) -> None:
         if not path.is_file():
             msg_err = f"Attachment not found: {file_path}"
             logger.error(msg_err)
-            raise FileNotFoundError(msg_err)
-
+            return False
         logger.info(f"Attaching file: {path.name}")
         with path.open("rb") as f:
             file_data = f.read()
@@ -89,36 +77,42 @@ def send_email_with_attachments(attachments: List[str]) -> None:
     try:
         logger.info(f"Connecting to SMTP server as {EMAIL_SENDER}")
         with smtplib.SMTP_SSL("smtp.gmail.com", 465) as smtp:
-            smtp.login(EMAIL_SENDER, EMAIL_PASSWORD)
+            smtp.login(EMAIL_SENDER or "", EMAIL_PASSWORD or "")
             smtp.send_message(msg)
         logger.info(
-            f"Email sent successfully to {EMAIL_RECEIVER} with {len(attachments)} attachment(s)."
+            f"Email sent successfully to {to_address} with {len(attachments)} attachment(s)."
         )
+        return True
     except smtplib.SMTPException as e:
         logger.error(f"Failed to send email: {e}")
-        raise
+        return False
 
-def send_email_with_attachment(recipient: str, subject: str, body: str, attachment_path: str) -> None:
+
+def send_email_with_attachment(
+    recipient: str, subject: str, body: str, attachment_path: str
+) -> None:
     """
     Sends an email with a PDF (or any file) attachment using SMTP via yagmail.
-    
+
     Args:
         recipient (str):   Recipient email address.
         subject (str):     Subject of the email.
         body (str):        Body text of the email.
         attachment_path (str): Full filesystem path to the file to attach.
-    
+
     Raises:
         RuntimeError: If any required environment variable is missing or sending fails.
     """
     # Validate environment variables
     sender = os.getenv("EMAIL_SENDER")
     password = os.getenv("EMAIL_PASSWORD")
-    
+
     if not sender or not password:
         logging.error("EMAIL_SENDER or EMAIL_PASSWORD not set in environment.")
-        raise RuntimeError("Missing EMAIL_SENDER or EMAIL_PASSWORD environment variables.")
-    
+        raise RuntimeError(
+            "Missing EMAIL_SENDER or EMAIL_PASSWORD environment variables."
+        )
+
     # Validate function arguments
     if not recipient:
         logging.error("Recipient email address is empty.")
@@ -129,23 +123,27 @@ def send_email_with_attachment(recipient: str, subject: str, body: str, attachme
     if not os.path.isfile(attachment_path):
         logging.error(f"Attachment file not found at path: {attachment_path}")
         raise FileNotFoundError(f"Attachment not found: {attachment_path}")
-    
+
     try:
         # Initialize SMTP client
         yag = yagmail.SMTP(user=sender, password=password)
-        
+
         # Prepare email contents: body text and attachment
         contents = [body, attachment_path]
-        
-        logging.info(f"Sending email to {recipient} with subject '{subject}' and attachment '{attachment_path}'")
+
+        logging.info(
+            f"Sending email to {recipient} with subject '{subject}' and attachment "
+            f"'{attachment_path}'"
+        )
         yag.send(to=recipient, subject=subject, contents=contents)
         logging.info(f"✅ Email sent successfully to {recipient}")
-    
+
     except Exception as e:
         logging.error(f"❌ Failed to send email to {recipient}: {e}", exc_info=True)
         raise RuntimeError(f"Failed to send email: {e}") from e
 
-def send_monthly_report(output_path: str):
+
+def send_monthly_report(output_path: str) -> None:
     """
     Sends the monthly summary report PDF via email using credentials and templates from .env.
 
@@ -158,8 +156,12 @@ def send_monthly_report(output_path: str):
         receiver = os.getenv("EMAIL_RECEIVER")
 
         today = date.today().isoformat()
-        subject = os.getenv("EMAIL_SUBJECT", "AutoClose Report").replace("${DATE}", today)
-        body = os.getenv("EMAIL_BODY", "").replace("${DATE}", today).replace("\\n", "\n")
+        subject = os.getenv("EMAIL_SUBJECT", "AutoClose Report").replace(
+            "${DATE}", today
+        )
+        body = (
+            os.getenv("EMAIL_BODY", "").replace("${DATE}", today).replace("\\n", "\n")
+        )
 
         yag = yagmail.SMTP(user=sender, password=password)
         yag.send(to=receiver, subject=subject, contents=[body, output_path])

@@ -2,6 +2,7 @@
 
 import re
 
+
 def parse_free_text_block(text: str) -> list:
     """
     Parse a full free-text message and return a list of job records.

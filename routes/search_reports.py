@@ -13,13 +13,15 @@ search_bp = Blueprint("search_reports", __name__)
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 handler = logging.StreamHandler()
-formatter = logging.Formatter("%(asctime)s [SEARCH_REPORTS] %(levelname)s - %(message)s")
+formatter = logging.Formatter(
+    "%(asctime)s [SEARCH_REPORTS] %(levelname)s - %(message)s"
+)
 handler.setFormatter(formatter)
 logger.addHandler(handler)
 
 
 @search_bp.route("/reports/search", methods=["GET", "POST"])
-def search_reports():
+def search_reports() -> str:
     """
     Display a form to search report files by date range.
     On POST, return a list of matching report files from subfolders (YYYY-MM-DD).
@@ -38,11 +40,11 @@ def search_reports():
             end_date = datetime.strptime(end_date_str, "%Y-%m-%d").date()
         except (ValueError, TypeError):
             error_message = "Invalid date format. Use YYYY-MM-DD."
-            logger.warning(f"Date parsing failed: '{start_date_str}' to '{end_date_str}'")
+            logger.warning(
+                f"Date parsing failed: '{start_date_str}' to '{end_date_str}'"
+            )
             return render_template(
-                "search_reports.html",
-                results=results,
-                error=error_message
+                "search_reports.html", results=results, error=error_message
             )
 
         # Ensure root exists
@@ -50,9 +52,7 @@ def search_reports():
             error_message = "Reports directory not found."
             logger.error(f"Output root missing: {output_root}")
             return render_template(
-                "search_reports.html",
-                results=results,
-                error=error_message
+                "search_reports.html", results=results, error=error_message
             )
 
         # Iterate over date-named subfolders
@@ -69,17 +69,15 @@ def search_reports():
             if start_date <= folder_date <= end_date:
                 for file in folder.iterdir():
                     if file.is_file() and file.suffix.lower() in {".xlsx", ".pdf"}:
-                        results.append({
-                            "date": folder.name,
-                            "name": file.name,
-                            "url": f"/{output_root.name}/{folder.name}/{file.name}"
-                        })
+                        results.append(
+                            {
+                                "date": folder.name,
+                                "name": file.name,
+                                "url": f"/{output_root.name}/{folder.name}/{file.name}",
+                            }
+                        )
 
         # Sort results by date then filename
         results.sort(key=lambda r: (r["date"], r["name"]))
 
-    return render_template(
-        "search_reports.html",
-        results=results,
-        error=error_message
-    )
+    return render_template("search_reports.html", results=results, error=error_message)

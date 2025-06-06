@@ -4,9 +4,17 @@ import re
 from typing import List, Dict, Optional, Any
 from datetime import datetime
 import pandas as pd
+from pathlib import Path
+import sys
+from error_handler.file_validator import FileValidator
+from error_handler.xls_converter import XlsConverter
 
-# Compiled pattern: splits on a newline when the next line starts with 5–7 uppercase letters or digits (Job ID).
-_SPLIT_PATTERN = re.compile(r'\n(?=[A-Z0-9]{5,7}\b)')
+BASE_DIR = Path(__file__).resolve().parent.parent
+sys.path.append(str(BASE_DIR / "myapp"))
+
+# Compiled pattern: splits on a newline when the next line starts with 5–7 uppercase letters or
+# digits (Job ID).
+_SPLIT_PATTERN = re.compile(r"\n(?=[A-Z0-9]{5,7}\b)")
 
 
 def split_jobs_by_id(text: str) -> List[str]:
@@ -52,12 +60,12 @@ def extract_job_data(block: str) -> Optional[Dict[str, Any]]:
         "address": None,
         "job_type": None,
         "car_info": None,
-        "notes": None,           # Currently only first line after car_info
+        "notes": None,  # Currently only first line after car_info
         "technician": None,
         "amount": None,
         "parts": 0.0,
         "payment_method": None,
-        "date": None
+        "date": None,
     }
 
     # 1. Job ID from first line
@@ -101,7 +109,9 @@ def extract_job_data(block: str) -> Optional[Dict[str, Any]]:
         data["technician"] = tech_match.group(1).strip()
 
     # 9. Amount and Payment Method
-    amount_match = re.search(r"(\d+\.?\d*)\$?\s*(cash|cc|zelle|venmo)?", block, re.IGNORECASE)
+    amount_match = re.search(
+        r"(\d+\.?\d*)\$?\s*(cash|cc|zelle|venmo)?", block, re.IGNORECASE
+    )
     if amount_match:
         data["amount"] = float(amount_match.group(1))
         if amount_match.group(2):
@@ -151,56 +161,34 @@ def parse_all_jobs(text: str) -> List[Dict[str, Any]]:
     return jobs
 
 
-def process_uploaded_file(file_path: str, start_date: str, end_date: str) -> list:
+def process_uploaded_file(file_path: str, start_date: str, end_date: str) -> list[dict]:
     """
-    Detects file type (txt/xlsx), parses job records, and filters by date range.
-    
+    Processes an uploaded Excel file after validating and converting if necessary.
+
     Args:
-        file_path (str): Full path to the uploaded file.
-        start_date (str): Start date in 'dd/mm/yyyy' format.
-        end_date (str): End date in 'dd/mm/yyyy' format.
+        file_path (str): Path to the uploaded file (may be .xls or .xlsx).
+        start_date (str): Start of the date filter range (YYYY-MM-DD).
+        end_date (str): End of the date filter range (YYYY-MM-DD).
 
     Returns:
-        list: Filtered list of job dictionaries.
+        list[dict]: List of filtered jobs as dictionaries.
     """
-    ext = file_path.lower().split('.')[-1]
-    records = []
+    # Step 1: Convert to .xlsx if needed
+    converter = XlsConverter()
+    actual_path = converter.convert_to_xlsx(file_path)
 
-    # Parse date range
-    if isinstance(start_date, str):
-        start = datetime.strptime(start_date, "%Y-%m-%d").date()
-    else:
-        start = start_date
+    # Step 2: Validate structure and contents
+    validator = FileValidator()
+    df = validator.validate(actual_path)
 
-    if isinstance(end_date, str):
-        end = datetime.strptime(end_date, "%Y-%m-%d").date()
-    else:
-        end = end_date
+    # Step 3: Parse and filter by date range
+    df["date"] = pd.to_datetime(df["date"], errors="coerce")
+    start = pd.to_datetime(start_date)
+    end = pd.to_datetime(end_date)
+    df_filtered = df[(df["date"] >= start) & (df["date"] <= end)]
 
-    if ext == 'txt':
-        with open(file_path, 'r') as f:
-            lines = f.readlines()
-        for line in lines:
-            # Example dummy parsing logic
-            if "Honda" in line:
-                record_date = datetime.strptime("20/05/2025", "%d/%m/%Y").date()  # mock
-                if start <= record_date <= end:
-                    records.append({"raw": line.strip(), "date": record_date})
-    elif ext == 'xlsx':
-        df = pd.read_excel(file_path)
-
-        # Try to parse the "date" column
-        df['date'] = pd.to_datetime(df['date'], errors='coerce')
-
-        # Filter valid rows within date range
-        filtered_df = df[
-            (df['date'].dt.date >= start) &
-            (df['date'].dt.date <= end)
-        ]
-
-        # Convert to list of dicts
-        records = filtered_df.to_dict(orient='records')
-    else:
-        raise ValueError("Unsupported file type")
-
-    return records
+    # Step 4: Return as list of dicts (with string keys)
+    return [
+        {str(k): v for k, v in row.items()}
+        for row in df_filtered.to_dict(orient="records")
+    ]

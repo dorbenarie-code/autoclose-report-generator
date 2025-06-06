@@ -101,7 +101,13 @@
       <h2 style="color:#007bff; font-size:1.2em;">Service Type Breakdown</h2>
       <img src="{{ chart_data }}" alt="Job Type Pie Chart" width="400"/>
       <h3>📊 Jobs per Technician</h3>
-      <img src="data:image/png;base64,{{ tech_bar_chart }}" alt="Technician Bar Chart" style="max-width: 100%; height: auto;">
+      <img src="{{ tech_bar_chart }}" alt="Technician Bar Chart" width="600"/>
+      <h3>💰 Total Amount per Technician</h3>
+      {% if technician_amount_chart %}
+        <img src="{{ technician_amount_chart }}" alt="Amount per Technician" width="600"/>
+      {% else %}
+        <p style="color:#888;">No amount data available.</p>
+      {% endif %}
     </div>
 
     <table class="table table-striped table-hover align-middle mt-4">

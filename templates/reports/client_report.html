@@ -9,31 +9,54 @@
       padding: 40px;
       line-height: 1.6;
       color: #333;
+      background: #fff;
     }
     h1 {
       text-align: center;
       color: #007bff;
+      margin-bottom: 30px;
     }
     .section {
       margin-bottom: 25px;
+      page-break-inside: avoid;
     }
     .section h2 {
       color: #444;
       border-bottom: 1px solid #ccc;
       padding-bottom: 5px;
+      margin-bottom: 15px;
+      font-weight: 600;
     }
     table {
       width: 100%;
       border-collapse: collapse;
-      margin-top: 15px;
+      margin-top: 5px;
+      font-size: 0.95em;
     }
     th, td {
       padding: 8px 12px;
-      border: 1px solid #ccc;
+      border: 1px solid #ddd;
     }
     th {
-      background-color: #f5f5f5;
+      background-color: #f7f7f7;
       text-align: left;
+      font-weight: 600;
+    }
+    .signature-block {
+      margin-top: 40px;
+      page-break-inside: avoid;
+      page-break-after: avoid;
+      text-align: left;
+    }
+    .signature-block img {
+      width: 160px;
+      display: block;
+      object-fit: contain;
+    }
+    .no-signature {
+      font-style: italic;
+      color: #888;
+      margin-top: 10px;
     }
   </style>
 </head>
@@ -42,50 +65,66 @@
 
   <div class="section">
     <h2>Customer Details</h2>
-    <p><strong>Name:</strong> {{ customer_name or 'N/A' }}</p>
-    <p><strong>Phone:</strong> {{ phone or 'N/A' }}</p>
-    <p><strong>Address:</strong> {{ address or 'N/A' }}</p>
-    <p><strong>Date:</strong> {{ date or 'N/A' }}</p>
+    <p><strong>Name:</strong> {{ report_data.get('customer_name', 'N/A') }}</p>
+    <p><strong>Phone:</strong> {{ report_data.get('phone', 'N/A') }}</p>
+    <p><strong>Address:</strong> {{ report_data.get('address', 'N/A') }}</p>
+    <p><strong>Date:</strong> {{ report_data.get('date', 'N/A') }}</p>
   </div>
 
   <div class="section">
     <h2>Service Details</h2>
     <table>
-      <tr><th>Job ID</th><td>{{ job_id or 'N/A' }}</td></tr>
-      <tr><th>Technician</th><td>{{ tech or 'N/A' }}</td></tr>
-      <tr><th>Company</th><td>{{ company_name or 'N/A' }}</td></tr>
-      <tr><th>Job Type</th><td>{{ job_type or 'N/A' }}</td></tr>
-      <tr><th>Vehicle</th><td>{{ vehicle or 'N/A' }}</td></tr>
-      <tr><th>Key Notes</th><td>{{ key_note or 'N/A' }}</td></tr>
-      <tr><th>Closed</th><td>{{ closed or 'N/A' }}</td></tr>
+      {% set fields = {
+        "Job ID": report_data.get('job_id', 'N/A'),
+        "Technician": report_data.get('tech', 'N/A'),
+        "Company": report_data.get('company_name', 'N/A'),
+        "Job Type": report_data.get('job_type', 'N/A'),
+        "Vehicle": report_data.get('vehicle', 'N/A'),
+        "Key Notes": report_data.get('key_note', 'N/A'),
+        "Closed": report_data.get('closed', 'N/A')
+      } %}
+      {% for label, value in fields.items() %}
+        <tr>
+          <th>{{ label }}</th>
+          <td>{{ value }}</td>
+        </tr>
+      {% endfor %}
     </table>
   </div>
 
   <div class="section">
     <h2>Payment Breakdown</h2>
     <table>
-      <tr><th>Total</th><td>${{ total or '0.00' }}</td></tr>
-      <tr><th>Cash</th><td>${{ cash or '0.00' }}</td></tr>
-      <tr><th>Credit</th><td>${{ credit or '0.00' }}</td></tr>
-      <tr><th>Parts</th><td>${{ parts or '0.00' }}</td></tr>
-      <tr><th>Tech Profit</th><td>${{ tech_profit or '0.00' }}</td></tr>
+      {% set payments = {
+        "Total": report_data.get('total', 0),
+        "Cash": report_data.get('cash', 0),
+        "Credit": report_data.get('credit', 0),
+        "Parts": report_data.get('parts', 0),
+        "Tech Profit": report_data.get('tech_profit', 0)
+      } %}
+      {% for label, amount in payments.items() %}
+        <tr>
+          <th>{{ label }}</th>
+          <td>${{ '%.2f'|format(amount) }}</td>
+        </tr>
+      {% endfor %}
     </table>
   </div>
 
   <div class="section">
     <h2>Additional Info</h2>
-    <p><strong>Tech Share:</strong> {{ tech_share or 'N/A' }}</p>
-    <p><strong>Billing:</strong> {{ billing or 'N/A' }}</p>
-    <p><strong>Check:</strong> {{ check or 'N/A' }}</p>
-    <p><strong>Company Parts:</strong> {{ company_parts or 'N/A' }}</p>
-    <p><strong>Balance Tech:</strong> {{ balance_tech or 'N/A' }}</p>
+    <p><strong>Tech Share:</strong> {{ report_data.get('tech_share', 'N/A') }}</p>
+    <p><strong>Billing:</strong> {{ report_data.get('billing', 'N/A') }}</p>
+    <p><strong>Check:</strong> {{ report_data.get('check', 'N/A') }}</p>
+    <p><strong>Company Parts:</strong> {{ report_data.get('company_parts', 'N/A') }}</p>
+    <p><strong>Balance Tech:</strong> {{ report_data.get('balance_tech', 'N/A') }}</p>
   </div>
 
-  <div class="section">
+  <div class="section signature-block">
     {% if signature_path %}
-      <img src="{{ signature_path }}" alt="Signature" width="160" />
+      <img src="{{ signature_path }}" alt="Signature" />
     {% else %}
-      <p><i>No signature available</i></p>
+      <p class="no-signature">No signature available</p>
     {% endif %}
   </div>
 </body>
