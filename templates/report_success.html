@@ -1,0 +1,109 @@
+<!-- templates/report_success.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <title>Report Ready - AutoClose</title>
+    <style>
+        /* Basic reset & typography */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f0f2f5;
+            color: #333;
+            text-align: center;
+            padding: 50px;
+        }
+
+        .container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .box {
+            background: #fff;
+            display: inline-block;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            max-width: 600px;
+            text-align: center;
+        }
+
+        .box h2 {
+            font-size: 24px;
+            color: #2c3e50;
+            margin-bottom: 16px;
+        }
+
+        .box p {
+            font-size: 16px;
+            color: #555;
+            margin-bottom: 10px;
+        }
+
+        .success-icon {
+            font-size: 64px;
+            color: #28a745;
+            margin-bottom: 20px;
+        }
+
+        .button {
+            margin-top: 20px;
+            padding: 12px 24px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            text-decoration: none;
+            display: inline-block;
+            transition: background-color 0.3s ease;
+        }
+        .button:hover {
+            background-color: #0056b3;
+        }
+
+        .footer-hint {
+            margin-top: 25px;
+            font-size: 14px;
+            color: #999;
+        }
+
+        /* Small screen adjustments */
+        @media (max-width: 600px) {
+            .box {
+                width: 90%;
+                padding: 20px;
+            }
+            .box h2 {
+                font-size: 20px;
+            }
+            .box p {
+                font-size: 14px;
+            }
+            .button {
+                font-size: 14px;
+                padding: 10px 16px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="box">
+            <div class="success-icon">✅</div>
+            <h2>Your PDF Report is Ready!</h2>
+            <p>The detailed report has been successfully generated and sent by email.</p>
+            <p>If you'd like to download it directly, click below:</p>
+            <a class="button" href="{{ url_for('reports.download_report', filename=report_filename) }}">⬇ Download PDF</a>
+            <p class="footer-hint">Thank you for using AutoClose!</p>
+        </div>
+    </div>
+</body>
+</html>

@@ -186,7 +186,7 @@
           </td>
           <td>
                 <a class="btn btn-outline-primary btn-sm download-link"
-              href="{{ url_for('download_report', filename=file.path) }}" 
+              href="{{ url_for('download_reports.download_report', filename=file.path) }}" 
               download
                    aria-label="Download {{ file.name }}"
                    data-bs-toggle="tooltip" title="Download {{ file.name }}">

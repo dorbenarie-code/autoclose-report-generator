@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>📋 Admin Panel – Edit Rules</h2>
+
+<form method="POST">
+  <h4>💼 Commission Rules (JSON)</h4>
+  <textarea name="commission_rules" rows="15" class="form-control">{{ comm_data }}</textarea>
+
+  <h4>🧾 Tax History (YAML)</h4>
+  <textarea name="tax_history" rows="15" class="form-control">{{ tax_data }}</textarea>
+
+  <br>
+  <button type="submit" class="btn btn-primary">💾 Save Changes</button>
+</form>
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+    <ul>
+    {% for category, message in messages %}
+      <li class="alert alert-{{ category }}">{{ message }}</li>
+    {% endfor %}
+    </ul>
+  {% endif %}
+{% endwith %}
+{% endblock %} 

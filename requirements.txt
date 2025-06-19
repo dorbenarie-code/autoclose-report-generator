@@ -31,3 +31,24 @@ matplotlib>=3.5.0,<4.0
 
 # Dev tools
 pytest>=7.0.0
+dash==3.0.4
+dash-bootstrap-components==2.0.3
+
+black>=23.3.0
+
+fpdf2==2.7.8
+
+# Plot rendering
+kaleido>=0.2.1
+
+flask-jwt-extended>=4.4.4
+
+flask-limiter>=3.5.0
+
+sentry-sdk>=1.40.0
+
+PyYAML>=6.0
+
+pydantic>=1.10,<2.0
+
+flask-smorest>=0.42.0

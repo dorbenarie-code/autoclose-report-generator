@@ -1,0 +1,304 @@
+# routes/upload_reports.py
+
+from flask import (
+    Blueprint,
+    request,
+    jsonify,
+    url_for,
+    current_app,
+    Response,
+    make_response,
+)
+from pathlib import Path
+import logging
+import os
+from werkzeug.utils import secure_filename
+import pandas as pd
+from datetime import datetime
+from typing import Optional
+
+from myapp.error_handler.xls_converter import XlsConverter
+from myapp.error_handler.base import FileFormatError
+
+from myapp.utils.file_uploader import save_uploaded_file
+from myapp.utils.parsing_utils import load_and_validate_excel
+from myapp.services.report_generation.pdf_generator import generate_detailed_report
+from myapp.services.mail_utils import send_report_by_email
+from myapp.utils.file_validator import (
+    validate_file_extension,
+    validate_file_size,
+    validate_file_count,
+    validate_email,
+    MAX_FILES_PER_UPLOAD,
+)
+from myapp.utils.report_utils import create_and_email_report
+from myapp.utils.logger_config import get_logger
+
+upload_bp = Blueprint("upload_reports", __name__)
+
+UPLOAD_FOLDER = Path("uploads/")
+OUTPUT_CSV = Path("output/merged_jobs.csv")
+
+log = get_logger(__name__)
+
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+
+
+def parse_date_flex(date_str: str) -> datetime:
+    formats = (
+        "%Y-%m-%d",
+        "%Y-%m-%d %H:%M:%S",
+        "%Y-%m-%dT%H:%M:%S",
+        "%Y-%m-%dT%H:%M:%S.%fZ"
+    )
+    for fmt in formats:
+        try:
+            return datetime.strptime(date_str, fmt)
+        except ValueError:
+            continue
+    raise ValueError(f"תאריך לא נתמך: {date_str}")
+
+
+@upload_bp.route("/upload", methods=["POST"])
+def upload_report() -> Response:
+    """
+    מטפל בהעלאת קבצים ושליחת דוחות.
+    מחזיר תשובה בפורמט JSON עם סטטוס והודעות שגיאה.
+    """
+    try:
+        # בדיקת אימייל
+        recipient_email = request.form.get("recipient_email")
+        if not recipient_email:
+            return make_response(
+                jsonify(
+                    {
+                        "status": "error",
+                        "message": "נא להזין כתובת אימייל",
+                        "field": "recipient_email",
+                    }
+                ),
+                400,
+            )
+
+        if not validate_email(recipient_email):
+            return make_response(
+                jsonify(
+                    {
+                        "status": "error",
+                        "message": "כתובת האימייל אינה תקינה",
+                        "field": "recipient_email",
+                    }
+                ),
+                400,
+            )
+
+        # בדיקת תאריכים
+        start_date_str = request.form.get("start_date")
+        end_date_str = request.form.get("end_date")
+
+        if not start_date_str or not end_date_str:
+            return make_response(
+                jsonify(
+                    {
+                        "status": "error",
+                        "message": "נא להזין תאריך התחלה ותאריך סיום",
+                        "field": "date_range",
+                    }
+                ),
+                400,
+            )
+
+        try:
+            start_date = parse_date_flex(start_date_str)
+            end_date = parse_date_flex(end_date_str)
+
+            if end_date < start_date:
+                return make_response(
+                    jsonify(
+                        {
+                            "status": "error",
+                            "message": "תאריך הסיום חייב להיות אחרי תאריך ההתחלה",
+                            "field": "date_range",
+                        }
+                    ),
+                    400,
+                )
+
+        except ValueError:
+            return make_response(
+                jsonify(
+                    {
+                        "status": "error",
+                        "message": "פורמט תאריך לא תקין. נא להשתמש בפורמט YYYY-MM-DD",
+                        "field": "date_range",
+                    }
+                ),
+                400,
+            )
+
+        # בדיקת קבצים
+        if "excel_files" not in request.files:
+            return make_response(
+                jsonify(
+                    {
+                        "status": "error",
+                        "message": "לא נבחרו קבצים",
+                        "field": "excel_files",
+                    }
+                ),
+                400,
+            )
+
+        excel_files = request.files.getlist("excel_files")
+
+        if not excel_files or all(f.filename == "" for f in excel_files):
+            return make_response(
+                jsonify(
+                    {
+                        "status": "error",
+                        "message": "לא נבחרו קבצים",
+                        "field": "excel_files",
+                    }
+                ),
+                400,
+            )
+
+        if not validate_file_count(excel_files):
+            return make_response(
+                jsonify(
+                    {
+                        "status": "error",
+                        "message": f"יותר מדי קבצים. מקסימום {MAX_FILES_PER_UPLOAD} קבצים מותרים",
+                        "field": "excel_files",
+                    }
+                ),
+                400,
+            )
+
+        results = []
+
+        for file in excel_files:
+            if file:
+                if file.filename is None:
+                    raise ValueError("Missing file name")
+                if validate_file_extension(file.filename):
+                    filename = file.filename
+                    assert filename is not None
+                    filename = secure_filename(filename)
+                    filepath = str(UPLOAD_FOLDER / filename)
+                    file.save(filepath)
+                    log.info(f"קובץ נשמר: {filepath}")
+
+                    if not validate_file_size(filepath):
+                        results.append(
+                            {
+                                "filename": filename,
+                                "status": "error",
+                                "message": "הקובץ גדול מדי",
+                                "field": "excel_files",
+                            }
+                        )
+                        if os.path.exists(filepath):
+                            os.remove(filepath)
+                        continue
+
+                    try:
+                        if filename.lower().endswith(".csv"):
+                            df = pd.read_csv(filepath)
+                        else:
+                            df = pd.read_excel(filepath, engine="openpyxl")
+
+                        report_path = create_and_email_report(
+                            df=df,
+                            to_email=recipient_email,
+                            start_date=str(start_date),
+                            end_date=str(end_date),
+                            file_name=filename,
+                        )
+
+                        if report_path:
+                            download_url = url_for(
+                                "download_reports.download_report",
+                                filename=os.path.basename(report_path),
+                                _external=True,
+                            )
+                            results.append(
+                                {
+                                    "filename": filename,
+                                    "status": "success",
+                                    "download_url": download_url,
+                                    "message": "הדוח נוצר ונשלח בהצלחה",
+                                }
+                            )
+                        else:
+                            results.append(
+                                {
+                                    "filename": filename,
+                                    "status": "error",
+                                    "message": "יצירת הדוח או שליחת המייל נכשלו. בדוק את הלוגים",
+                                    "field": "report_generation",
+                                }
+                            )
+
+                    except Exception as e:
+                        log.error(f"שגיאה בעיבוד {filename}: {e}", exc_info=True)
+                        results.append(
+                            {
+                                "filename": filename,
+                                "status": "error",
+                                "message": f"שגיאה בעיבוד הקובץ: {str(e)}",
+                                "field": "file_processing",
+                            }
+                        )
+                    finally:
+                        if os.path.exists(filepath):
+                            os.remove(filepath)
+                            log.info(f"קובץ זמני הוסר: {filepath}")
+                else:
+                    results.append(
+                        {
+                            "filename": file.filename,
+                            "status": "error",
+                            "message": "הקובץ אינו נתמך או ריק",
+                            "field": "excel_files",
+                        }
+                    )
+
+        # בדיקה אם יש לפחות קובץ אחד שהצליח
+        # הפוך כל dict ב-results ל-str בלבד (v or "")
+        results = [{k: v or "" for k, v in d.items()} for d in results]
+        if not any(r["status"] == "success" for r in results):
+            return make_response(
+                jsonify(
+                    {
+                        "status": "error",
+                        "message": "לא הצלחנו לעבד אף קובץ",
+                        "results": results,
+                    }
+                ),
+                400,
+            )
+
+        return make_response(
+            jsonify(
+                {
+                    "status": "success",
+                    "message": "הקבצים עובדו בהצלחה",
+                    "results": results,
+                }
+            ),
+            200,
+        )
+
+    except Exception as e:
+        log.error(f"שגיאה כללית: {e}", exc_info=True)
+        return make_response(
+            jsonify(
+                {
+                    "status": "error",
+                    "message": "שגיאה כללית בעיבוד הבקשה",
+                    "error": str(e),
+                }
+            ),
+            500,
+        )

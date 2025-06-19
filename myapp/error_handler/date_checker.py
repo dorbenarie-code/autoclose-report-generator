@@ -1,5 +1,11 @@
+from myapp.utils.logger_config import get_logger
+
+log = get_logger(__name__)
+from myapp.utils.logger_config import get_logger
+
+logger = get_logger(__name__)
 import logging
-from typing import Optional
+from typing import Optional, Any
 import pandas as pd
 from .base import InvalidDateError, MissingColumnError
 
@@ -71,7 +77,7 @@ class DateChecker:
 
             self.logger.debug(f"Row {idx}: Valid date '{raw_value}'.")
 
-    def _is_valid_date(self, value) -> bool:
+    def _is_valid_date(self, value: Any) -> bool:
         """
         מנסה להמיר ערך לפורמט תאריך באמצעות pandas.
         אם date_format הוגדר, משתמש בו; אחרת מאפשר חילוץ אוטומטי.

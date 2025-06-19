@@ -1,0 +1,57 @@
+{
+    "default": {
+      "raw_to_canonical": {
+        "job_id": "job_id",
+        "tech": "tech",
+        "Technician": "tech",
+        "טכנאי": "tech",
+        "created": "created",
+        "date": "date",
+        "closed": "closed",
+        "job_type": "job_type",
+        "address": "address",
+        "total": "total",
+        "cash": "cash",
+        "credit": "credit",
+        "billing": "billing",
+        "check": "check",
+        "tech_share": "tech_share",
+        "tip_amount": "tip_amount",
+        "parts": "parts",
+        "company_parts": "company_parts",
+        "tech_profit": "tech_profit",
+        "balance_tech": "balance_tech"
+      },
+      "date_columns": [
+        "created",
+        "date",
+        "closed"
+      ],
+      "canonical_columns": [
+        "job_id",
+        "tech",
+        "created",
+        "date",
+        "closed",
+        "job_type",
+        "address",
+        "total",
+        "cash",
+        "credit",
+        "billing",
+        "check",
+        "tech_share",
+        "tip_amount",
+        "parts",
+        "company_parts",
+        "tech_profit",
+        "balance_tech"
+      ],
+      "required_columns": [
+        "job_id",
+        "tech",
+        "date"
+      ]
+    }
+  }
+  

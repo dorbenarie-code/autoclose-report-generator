@@ -1,4 +1,3 @@
-```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -58,47 +57,53 @@
     </nav>
   </header>
 
-  <!-- Alerts if no folders -->
-  {% if not folders %}
-    <div class="alert alert-info text-center no-reports" role="alert">
-      No archived reports available.
+  <form method="get" class="row mb-4">
+    <div class="col-md-3">
+      <select name="type" class="form-select">
+        <option value="">כל הסוגים</option>
+        <option value="pdf">PDF בלבד</option>
+        <option value="excel">Excel בלבד</option>
+      </select>
     </div>
-  {% endif %}
+    <div class="col-md-3">
+      <input type="date" name="start_date" class="form-control" placeholder="תאריך התחלה" />
+    </div>
+    <div class="col-md-3">
+      <input type="date" name="end_date" class="form-control" placeholder="תאריך סיום" />
+    </div>
+    <div class="col-md-3">
+      <button type="submit" class="btn btn-primary w-100">סנן</button>
+    </div>
+  </form>
 
-  <!-- Report Folders List -->
-  <div class="row">
-    {% for folder in folders %}
-      <div class="col-12 col-md-6 col-lg-4">
-        <div class="card report-card">
-          <div class="card-header d-flex justify-content-between align-items-center">
-            <span>
-              <a href="{{ url_for('reports.reports_by_date', date_str=folder.date) }}" class="text-decoration-none">
-                {{ folder.date }}
-              </a>
-            </span>
-            <span class="badge bg-secondary">{{ folder.files|length }}</span>
-          </div>
-          <ul class="list-group list-group-flush">
-            {% for file in folder.files %}
-              {% set ext = file.rsplit('.', 1)[-1].lower() %}
-              <li class="list-group-item">
-                <a href="{{ folder.url_path }}/{{ file }}" target="_blank" class="file-link text-decoration-none">
-                  {% if ext == 'pdf' %}
-                    <i class="bi bi-file-earmark-pdf-fill text-danger"></i>
-                  {% elif ext in ['xlsx', 'xls'] %}
-                    <i class="bi bi-file-earmark-excel-fill text-success"></i>
-                  {% else %}
-                    <i class="bi bi-file-earmark-fill text-secondary"></i>
-                  {% endif %}
-                  <span>{{ file }}</span>
-                </a>
-              </li>
-            {% endfor %}
-          </ul>
-        </div>
-      </div>
-    {% endfor %}
-  </div>
+  {% if reports|length == 0 %}
+    <div class="alert alert-info text-center no-reports" role="alert">
+      לא נמצאו דוחות תואמים.
+    </div>
+  {% else %}
+  <table class="table table-striped">
+    <thead>
+      <tr>
+        <th>תאריך יצירה</th>
+        <th>שם הדוח</th>
+        <th>סוג</th>
+        <th>פעולה</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for report in reports %}
+        <tr>
+          <td>{{ report.created }}</td>
+          <td>{{ report.name }}</td>
+          <td>{{ report.type }}</td>
+          <td>
+            <a href="{{ url_for('reports.download_report', filename=report.name) }}" target="_blank" class="btn btn-sm btn-outline-primary">📥 הורד</a>
+          </td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% endif %}
 
   <!-- Footer -->
   <footer class="mt-5 text-center text-muted">

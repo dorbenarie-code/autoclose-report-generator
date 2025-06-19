@@ -1,0 +1,18 @@
+default:
+  rate: 0.3
+
+clients:
+  PRO_ON_CALL_SERVICES_INC:
+    default:
+      rate: 0.4
+    services:
+      AC_INSTALL:
+        rate: 0.5
+    techs:
+      Viktor:
+        rate: 0.55
+      Sapir:
+        flat: 75
+  ANOTHER_CLIENT_LLC:
+    default:
+      flat: 60 

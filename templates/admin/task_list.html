@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>📌 Action Items</h2>
+
+<a href="?severity=CRITICAL" class="btn btn-danger btn-sm">CRITICAL</a>
+<a href="?severity=WARNING" class="btn btn-warning btn-sm">WARNING</a>
+<a href="?severity=INFO" class="btn btn-secondary btn-sm">INFO</a>
+<a href="/admin/tasks" class="btn btn-light btn-sm">ALL</a>
+
+<table class="table table-bordered mt-3">
+  <thead>
+    <tr>
+      <th>Severity</th>
+      <th>Message</th>
+      <th>Status</th>
+      <th>Time</th>
+      <th>Origin</th>
+      <th>Actions</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for t in tasks %}
+    <tr>
+      <td><strong>{{ t.severity }}</strong></td>
+      <td>{{ t.message }}</td>
+      <td>{{ t.status }}</td>
+      <td>{{ t.timestamp[:16] }}</td>
+      <td>{{ t.origin }}</td>
+      <td>
+        {% if t.status != "RESOLVED" %}
+        <a href="{{ url_for('tasks_bp.resolve_task', task_id=t.id) }}" class="btn btn-success btn-sm">Resolve</a>
+        {% endif %}
+        <a href="{{ url_for('tasks_bp.delete_task', task_id=t.id) }}" class="btn btn-danger btn-sm">Delete</a>
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %} 

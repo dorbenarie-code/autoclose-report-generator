@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <title>דוח לקוח</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        h1 { color: #333; }
+        .details { margin-top: 20px; }
+        .details p { margin: 5px 0; }
+    </style>
+</head>
+<body>
+    <h1>דוח לקוח</h1>
+    <div class="details">
+        <p><strong>שם לקוח:</strong> {{ client_name }}</p>
+        <p><strong>מספר עבודה:</strong> {{ job_id }}</p>
+        <p><strong>תאריך:</strong> {{ date }}</p>
+        <p><strong>סכום:</strong> {{ amount }}</p>
+        <p><strong>טכנאי:</strong> {{ technician }}</p>
+        <p><strong>הערות:</strong> {{ notes }}</p>
+    </div>
+</body>
+</html> 

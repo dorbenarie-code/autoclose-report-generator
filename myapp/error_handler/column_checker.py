@@ -1,5 +1,8 @@
+from myapp.utils.logger_config import get_logger
+
+logger = get_logger(__name__)
 import logging
-from typing import Dict, List
+from typing import Dict, List, Optional
 import pandas as pd
 from .base import MissingColumnError
 
@@ -29,7 +32,7 @@ class ColumnChecker:
         self,
         required_columns: Dict[str, List[str]],
         case_insensitive: bool = False,
-        logger: logging.Logger = None,
+        logger: Optional[logging.Logger] = None,
     ) -> None:
         """
         Args:
@@ -69,7 +72,7 @@ class ColumnChecker:
             normalized_actual = {col: col for col in actual_columns}
 
         for logical_name, alternatives in self.required_columns.items():
-            found_name: str | None = None
+            found_name: Optional[str] = None
 
             for alt in alternatives:
                 if self.case_insensitive:
@@ -96,5 +99,7 @@ class ColumnChecker:
             raise MissingColumnError(
                 f"Missing required columns for logical names: {missing_str}"
             )
+
+        return matched
 
         return matched

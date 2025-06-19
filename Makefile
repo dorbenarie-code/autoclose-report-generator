@@ -3,7 +3,7 @@
 RENDER_API_TOKEN := $(shell grep RENDER_API_TOKEN .env | cut -d '=' -f2)
 RENDER_SERVICE_ID := $(shell grep RENDER_SERVICE_ID .env | cut -d '=' -f2)
 
-.PHONY: format lint types test check all deploy logs logs-render types-fix style
+.PHONY: format lint types test check all deploy logs logs-render types-fix style run integrity-init integrity-check check-duplicates test-pipeline report
 
 format:
 	@echo "🧹 Formatting code with Black..."
@@ -16,7 +16,7 @@ lint:
 types:
 	@echo "🔎 Checking type hints with mypy..."
 	@echo "🔧 Installing missing type stubs..." && mypy --install-types --non-interactive > /dev/null || true
-	@mypy --config-file mypy.ini utils/ routes/ app.py test_report_utils.py || (echo '❌ Type check failed.' && exit 1)
+	@mypy --config-file mypy.ini myapp/ tests/ || (echo '❌ Type check failed.' && exit 1)
 
 test:
 	@echo "🔍 Running tests with pytest..."
@@ -61,3 +61,25 @@ types-fix:
 	@touch routes/__init__.py
 	@echo "🔁 Re-running type check..."
 	@mypy utils/ routes/ app.py test_report_utils.py || (echo '❌ Type check failed.' && exit 1)
+
+run:
+	python run.py
+
+integrity-init:
+	@echo "🧬 Generating integrity manifest..."
+	@python scripts/verify_integrity.py init --root myapp --manifest integrity.json
+
+integrity-check:
+	@echo "🧪 Checking project integrity..."
+	@python scripts/verify_integrity.py check --root myapp --manifest integrity.json
+
+check-duplicates:
+	@echo "🔎 Running duplicate code scanner..."
+	@python scripts/check_duplicates.py || echo "✅ No duplicates found."
+
+test-pipeline:
+	@echo "🧪 Running pipeline test (PDF generation)..."
+	@pytest tests/test_report_pipeline.py -v || (echo '❌ Pipeline test failed' && exit 1)
+
+report:
+	python cli_report.py uploads/good_test_data.csv

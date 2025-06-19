@@ -1,0 +1,12 @@
+[
+  {
+    "filename": "report1.pdf",
+    "path": "/tmp/pytest-of-dorma/pytest-1/test_add_report_creates_manife0/report1.pdf",
+    "created_at": "2025-06-18T22:43:20.682023",
+    "rows": 3,
+    "total": "600.0",
+    "client_id": "C1",
+    "tech_name": "T1",
+    "report_type": "R1"
+  }
+]

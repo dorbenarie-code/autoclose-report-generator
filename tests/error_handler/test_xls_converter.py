@@ -1,8 +1,9 @@
 import logging
 import pandas as pd
 from pathlib import Path
-from .base import FileFormatError
+from myapp.error_handler.base import FileFormatError
 import warnings
+from typing import Optional
 
 warnings.simplefilter(action="ignore", category=UserWarning)
 
@@ -13,7 +14,7 @@ class XlsConverter:
     If the input is not an .xls file, it is returned unchanged.
     """
 
-    def __init__(self, temp_dir: Path = None):
+    def __init__(self, temp_dir: Optional[Path] = None) -> None:
         """
         Args:
             temp_dir (Path): Directory where converted files are stored.

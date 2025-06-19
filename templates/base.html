@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <!-- Character encoding for proper text rendering -->
+  <meta charset="UTF-8">
+
+  <!-- Responsive behavior on mobile devices -->
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <!-- Page title; overridden by child templates -->
+  <title>{% block title %}AutoClose{% endblock %}</title>
+
+  <!-- Bootstrap 5.3 CSS from CDN (integrity & crossorigin for security) -->
+  <link
+    href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+    rel="stylesheet"
+    integrity="sha384-OKZt+RLj3XL1W0fQ0kfXGPLzs2r1xIpY3+x4XEzvFh3JhaY19axK4QXrJdbj6dVg"
+    crossorigin="anonymous"
+  >
+
+  <!-- Custom CSS for theme and layout -->
+  <link
+    href="{{ url_for('static', filename='css/style.css') }}"
+    rel="stylesheet"
+  >
+
+  <!-- Hook for additional <head> content (e.g. page-specific meta, CSS) -->
+  {% block head %}{% endblock %}
+</head>
+<body class="{% block body_class %}bg-light text-dark{% endblock %}">
+  <!-- HEADER: Navbar or branding -->
+  {% block header %}
+  <header class="py-3 border-bottom bg-white shadow-sm">
+    <div class="container d-flex justify-content-between align-items-center">
+      <a href="{{ url_for('index') }}" class="text-decoration-none">
+        <h1 class="h4 m-0">AutoClose</h1>
+      </a>
+      <div class="text-end">
+        <small>Role: {{ session['role'] }}</small>
+      </div>
+      <!-- Child templates can inject nav items here -->
+      {% block nav %}{% endblock %}
+    </div>
+  </header>
+  {% endblock %}
+
+  <!-- MAIN CONTENT AREA -->
+  <main class="container my-4">
+    {% block content %}{% endblock %}
+  </main>
+
+  <!-- FOOTER: copyright and links -->
+  {% block footer %}
+  <footer class="text-center text-muted py-3 border-top small">
+    &copy; {{ current_year or "2025" }} AutoClose Inc. All rights reserved.
+  </footer>
+  {% endblock %}
+
+  <!-- Bootstrap JS Bundle (Popper + JS) -->
+  <script
+    src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"
+    integrity="sha384-kenU1KFdBIe4zVF0s0G1M5b4hcpxyD9F7jL+9o8zWv5s1VnXhZ+8abtTE1Pi6jizo"
+    crossorigin="anonymous"
+  ></script>
+
+  <!-- Hook for page-specific scripts -->
+  {% block scripts %}{% endblock %}
+</body>
+</html>
+
+
+
+
+
+
+

@@ -1,3 +1,5 @@
+from myapp.utils.logger_config import get_logger
+from typing import Optional
 import logging
 import pandas as pd
 from pathlib import Path
@@ -10,7 +12,7 @@ class XlsConverter:
     If the input is not an .xls file, it is returned unchanged.
     """
 
-    def __init__(self, temp_dir: Path = None):
+    def __init__(self, temp_dir: Optional[Path] = None):
         """
         Args:
             temp_dir (Path): Directory where converted files are stored.

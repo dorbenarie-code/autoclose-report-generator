@@ -1,3 +1,5 @@
+from myapp.utils.logger_config import get_logger
+from typing import Any
 import pandas as pd
 from .base import FileFormatError
 from .column_checker import ColumnChecker
@@ -7,7 +9,7 @@ from .xls_converter import XlsConverter
 
 
 class FileValidator:
-    def __init__(self):
+    def __init__(self) -> None:
         self.column_checker = ColumnChecker(
             {
                 "job_id": ["job_id", "jobid"],
@@ -19,7 +21,7 @@ class FileValidator:
         self.value_sanitizer = ValueSanitizer(["client", "technician"])
         self.xls_converter = XlsConverter()
 
-    def validate(self, file_path):
+    def validate(self, file_path: Any) -> pd.DataFrame:
         # Convert if needed
         actual_path = self.xls_converter.convert_to_xlsx(file_path)
 

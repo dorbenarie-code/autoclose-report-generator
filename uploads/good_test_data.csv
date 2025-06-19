@@ -1,0 +1,4 @@
+job_id,technician,created,date,closed,job_type,address,total,cash,credit,billing,check,tech_share,tip_amount,parts,company_parts,company,flag_missing_data
+A1,דוד,2024-06-01,2024-06-02,2024-06-03,Install,123 Main St,1000,500,300,100,100,50%,50,200,50,AutoClose Ltd,False
+A2,שרה,2024-06-04,2024-06-05,2024-06-06,Repair,456 Side Rd,1500,1000,200,200,100,60%,60,300,100,AutoClose Ltd,False
+A3,יוסי,2024-06-07,2024-06-08,2024-06-09,Maintenance,789 North Ave,2000,1500,200,200,100,55%,70,400,150,AutoClose Ltd,False

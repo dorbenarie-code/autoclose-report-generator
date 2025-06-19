@@ -1,0 +1,192 @@
+[
+  {
+    "filename": "test_large_report_20250615_223646.pdf",
+    "path": "output/test_large_report_20250615_223646.pdf",
+    "created_at": "2025-06-15T19:36:46Z",
+    "rows": 50,
+    "total": 50.0,
+    "client_id": "",
+    "tech_name": "",
+    "report_type": "test_large"
+  },
+  {
+    "filename": "header_repeat_report_20250615_223646.pdf",
+    "path": "output/header_repeat_report_20250615_223646.pdf",
+    "created_at": "2025-06-15T19:36:46Z",
+    "rows": 100,
+    "total": 100.0,
+    "client_id": "",
+    "tech_name": "",
+    "report_type": "header_repeat"
+  },
+  {
+    "filename": "test_large_report_20250615_223943.pdf",
+    "path": "output/test_large_report_20250615_223943.pdf",
+    "created_at": "2025-06-15T19:39:43Z",
+    "rows": 50,
+    "total": 50.0,
+    "client_id": "",
+    "tech_name": "",
+    "report_type": "test_large"
+  },
+  {
+    "filename": "header_repeat_report_20250615_223943.pdf",
+    "path": "output/header_repeat_report_20250615_223943.pdf",
+    "created_at": "2025-06-15T19:39:43Z",
+    "rows": 100,
+    "total": 100.0,
+    "client_id": "",
+    "tech_name": "",
+    "report_type": "header_repeat"
+  },
+  {
+    "filename": "test_large_report_20250615_224046.pdf",
+    "path": "output/test_large_report_20250615_224046.pdf",
+    "created_at": "2025-06-15T19:40:46Z",
+    "rows": 50,
+    "total": 50.0,
+    "client_id": "",
+    "tech_name": "",
+    "report_type": "test_large"
+  },
+  {
+    "filename": "header_repeat_report_20250615_224046.pdf",
+    "path": "output/header_repeat_report_20250615_224046.pdf",
+    "created_at": "2025-06-15T19:40:46Z",
+    "rows": 100,
+    "total": 100.0,
+    "client_id": "",
+    "tech_name": "",
+    "report_type": "header_repeat"
+  },
+  {
+    "filename": "test_large_report_20250615_224117.pdf",
+    "path": "output/test_large_report_20250615_224117.pdf",
+    "created_at": "2025-06-15T19:41:17Z",
+    "rows": 50,
+    "total": 50.0,
+    "client_id": "",
+    "tech_name": "",
+    "report_type": "test_large"
+  },
+  {
+    "filename": "header_repeat_report_20250615_224117.pdf",
+    "path": "output/header_repeat_report_20250615_224117.pdf",
+    "created_at": "2025-06-15T19:41:17Z",
+    "rows": 100,
+    "total": 100.0,
+    "client_id": "",
+    "tech_name": "",
+    "report_type": "header_repeat"
+  },
+  {
+    "filename": "test_large_report_20250615_224203.pdf",
+    "path": "output/test_large_report_20250615_224203.pdf",
+    "created_at": "2025-06-15T19:42:04Z",
+    "rows": 50,
+    "total": 50.0,
+    "client_id": "",
+    "tech_name": "",
+    "report_type": "test_large"
+  },
+  {
+    "filename": "header_repeat_report_20250615_224204.pdf",
+    "path": "output/header_repeat_report_20250615_224204.pdf",
+    "created_at": "2025-06-15T19:42:04Z",
+    "rows": 100,
+    "total": 100.0,
+    "client_id": "",
+    "tech_name": "",
+    "report_type": "header_repeat"
+  },
+  {
+    "filename": "test_large_report_20250615_224242.pdf",
+    "path": "output/test_large_report_20250615_224242.pdf",
+    "created_at": "2025-06-15T19:42:43Z",
+    "rows": 50,
+    "total": 50.0,
+    "client_id": "",
+    "tech_name": "",
+    "report_type": "test_large"
+  },
+  {
+    "filename": "header_repeat_report_20250615_224243.pdf",
+    "path": "output/header_repeat_report_20250615_224243.pdf",
+    "created_at": "2025-06-15T19:42:43Z",
+    "rows": 100,
+    "total": 100.0,
+    "client_id": "",
+    "tech_name": "",
+    "report_type": "header_repeat"
+  },
+  {
+    "filename": "test_large_report_20250615_224317.pdf",
+    "path": "output/test_large_report_20250615_224317.pdf",
+    "created_at": "2025-06-15T19:43:17Z",
+    "rows": 50,
+    "total": 50.0,
+    "client_id": "",
+    "tech_name": "",
+    "report_type": "test_large"
+  },
+  {
+    "filename": "header_repeat_report_20250615_224317.pdf",
+    "path": "output/header_repeat_report_20250615_224317.pdf",
+    "created_at": "2025-06-15T19:43:18Z",
+    "rows": 100,
+    "total": 100.0,
+    "client_id": "",
+    "tech_name": "",
+    "report_type": "header_repeat"
+  },
+  {
+    "filename": "custom_share_test_report_20250616_114910.pdf",
+    "path": "output/custom_share_test_report_20250616_114910.pdf",
+    "created_at": "2025-06-16T08:49:10Z",
+    "rows": 2,
+    "total": 300.0,
+    "client_id": "test_client",
+    "tech_name": "",
+    "report_type": "custom_share_test"
+  },
+  {
+    "filename": "custom_share_test_report_20250616_120317.pdf",
+    "path": "output/custom_share_test_report_20250616_120317.pdf",
+    "created_at": "2025-06-16T09:03:17Z",
+    "rows": 2,
+    "total": 300.0,
+    "client_id": "client123",
+    "tech_name": "john.doe",
+    "report_type": "custom_share_test"
+  },
+  {
+    "filename": "test_large_report_20250616_211715.pdf",
+    "path": "output/test_large_report_20250616_211715.pdf",
+    "created_at": "2025-06-16T18:17:15Z",
+    "rows": 50,
+    "total": 50.0,
+    "client_id": "",
+    "tech_name": "",
+    "report_type": "test_large"
+  },
+  {
+    "filename": "custom_share_test_report_20250616_211715.pdf",
+    "path": "output/custom_share_test_report_20250616_211715.pdf",
+    "created_at": "2025-06-16T18:17:15Z",
+    "rows": 2,
+    "total": 300.0,
+    "client_id": "client123",
+    "tech_name": "john.doe",
+    "report_type": "custom_share_test"
+  },
+  {
+    "filename": "header_repeat_report_20250616_211715.pdf",
+    "path": "output/header_repeat_report_20250616_211715.pdf",
+    "created_at": "2025-06-16T18:17:16Z",
+    "rows": 100,
+    "total": 100.0,
+    "client_id": "",
+    "tech_name": "",
+    "report_type": "header_repeat"
+  }
+]

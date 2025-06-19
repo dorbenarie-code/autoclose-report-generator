@@ -1,0 +1,62 @@
+import pandas as pd
+
+# Load the original CSV
+input_path = 'output/merged_jobs.csv'
+output_path = 'output/merged_jobs_filled.csv'
+df = pd.read_csv(input_path, dtype=str, keep_default_na=False)
+
+# Define required columns and demo values
+out_cols = [
+    'name', 'phone', 'job_id', 'address', 'service_type', 'car', 'notes',
+    'technician', 'payment_type', 'total', 'parts', 'code', 'timestamp'
+]
+
+# Add missing columns with demo values
+if 'name' not in df.columns:
+    df['name'] = [f'Customer {i+1}' for i in range(len(df))]
+if 'phone' not in df.columns:
+    df['phone'] = '9999999999'
+if 'car' not in df.columns:
+    df['car'] = '2020 Toyota Corolla'
+if 'notes' not in df.columns:
+    df['notes'] = 'No additional notes'
+
+# technician from tech (after last /) or from existing technician
+if 'technician' not in df.columns:
+    if 'tech' in df.columns:
+        df['technician'] = df['tech'].apply(lambda x: x.split('/')[-1].strip() if isinstance(x,str) and '/' in x else (x.strip() if isinstance(x,str) else ''))
+    else:
+        df['technician'] = ''
+
+# payment_type from first nonzero payment column
+payment_cols = ['cash','credit','billing','check','zelle']
+def get_payment(row):
+    for t in payment_cols:
+        if t in row and str(row[t]).strip() and str(row[t]).strip() not in ['0','0.0','']:
+            return t
+    return ''
+if 'payment_type' not in df.columns:
+    df['payment_type'] = df.apply(get_payment, axis=1)
+
+# timestamp from created
+if 'timestamp' not in df.columns:
+    if 'created' in df.columns:
+        df['timestamp'] = df['created']
+    else:
+        df['timestamp'] = ''
+
+# code from job_id
+if 'code' not in df.columns:
+    if 'job_id' in df.columns:
+        df['code'] = df['job_id']
+    else:
+        df['code'] = ''
+
+# Ensure all required columns exist
+for col in out_cols:
+    if col not in df.columns:
+        df[col] = ''
+
+# Reorder and save
+out_df = df[out_cols]
+out_df.to_csv(output_path, index=False) 

@@ -1,0 +1,317 @@
+from myapp.utils.logger_config import get_logger
+from typing import Optional, Any
+
+log = get_logger(__name__)
+# routes/reports.py
+
+# === Standard Library Imports ===
+import os
+import logging
+from pathlib import Path
+from typing import cast
+from datetime import datetime, timedelta
+
+# === Third-Party Imports ===
+from flask import (
+    Blueprint,
+    request,
+    redirect,
+    flash,
+    render_template,
+    current_app,
+    Response,
+    send_file,
+    abort,
+    url_for,
+    make_response,
+)
+
+# === Internal/Project Imports ===
+from myapp.services.email_service import EmailService
+from myapp.services.response_utils import (
+    render_with_context,
+    handle_exception_context,
+    get_file_list_for_render,
+)
+from myapp.services.report_list_service import list_exported_reports
+from myapp.services.report_analyzer import (
+    build_report_data,
+    get_kpi_summary,
+    get_report_summary,
+)
+from myapp.services.export_utils import (
+    export_overview_csv,
+    export_overview_excel,
+    export_overview_pdf,
+)
+from myapp.utils.date_utils import parse_date_flex
+
+reports_bp = Blueprint("reports", __name__, url_prefix="/reports")
+
+
+@reports_bp.route("/reports")
+def list_reports() -> Response:
+    """
+    מציג את כל הדוחות בתיקיית export כולל סינון לפי סוג קובץ וטווח תאריכים.
+    """
+    report_type = request.args.get("type", "").lower()
+    start_str = request.args.get("start_date", "")
+    end_str = request.args.get("end_date", "")
+
+    reports = list_exported_reports()
+
+    # סינון לפי סוג קובץ
+    if report_type in {"pdf", "excel"}:
+        ext = "pdf" if report_type == "pdf" else "xlsx"
+        reports = [r for r in reports if r["name"].lower().endswith(ext)]
+
+    # סינון לפי טווח תאריכים
+    try:
+        if start_str:
+            start_date = parse_date_flex(start_str)
+            reports = [
+                r
+                for r in reports
+                if parse_date_flex(r["created"]) >= start_date
+            ]
+        if end_str:
+            end_date = parse_date_flex(end_str)
+            reports = [
+                r
+                for r in reports
+                if parse_date_flex(r["created"]) <= end_date
+            ]
+    except Exception:
+        flash("⚠ תאריך לא תקין", "warning")
+
+    # מיון מהחדש לישן
+    reports = sorted(reports, key=lambda r: r["created"], reverse=True)
+
+    return cast(
+        Response, make_response(render_template("reports.html", reports=reports, now=datetime.utcnow()), 200)
+    )
+
+
+@reports_bp.route("/reports/<date_str>")
+def reports_by_date(date_str: str) -> Response:
+    """
+    מציג את כל העבודות (jobs) עבור תאריך מסוים (YYYY-MM-DD) בטבלה.
+    """
+    from myapp.utils.report_utils import get_jobs_by_date
+
+    jobs = get_jobs_by_date(date_str)  # פונקציה שתחזיר רשימת dict של עבודות
+    return cast(
+        Response,
+        make_response(
+            render_template("reports_by_date.html", date=date_str, jobs=jobs), 200
+        ),
+    )
+
+
+@reports_bp.route("/send-monthly-report", methods=["POST"])
+def send_monthly_report() -> Response:
+    """
+    Handle form submission to send a monthly report PDF via email.
+    Expects 'start_date', 'end_date', and optional 'email' in the POST form.
+    """
+    try:
+        start_date = request.form.get("start_date", "").strip()
+        end_date = request.form.get("end_date", "").strip()
+        email = request.form.get("email", "").strip()
+
+        file_list = get_file_list_for_render()
+
+        if not start_date or not end_date:
+            return cast(
+                Response,
+                render_with_context("❌ חובה לבחור טווח תאריכים.", "danger", file_list),
+            )
+
+        if not email:
+            return cast(
+                Response,
+                render_with_context("❌ חובה להזין כתובת אימייל.", "danger", file_list),
+            )
+
+        pdf_filename = f"monthly_summary_{start_date}_{end_date}.pdf"
+        pdf_path = os.path.join("static", "monthly_reports", pdf_filename)
+
+        if not os.path.isfile(pdf_path):
+            logging.error(f"PDF file not found: {pdf_path}")
+            return cast(
+                Response,
+                render_with_context(
+                    "❌ הדוח לא נמצא על השרת. בדוק את התאריכים שנבחרו.",
+                    "danger",
+                    file_list,
+                ),
+            )
+
+        service = EmailService()
+        service.send_monthly_report(
+            to=email,
+            subject="Monthly Report",
+            body="Attached is your monthly report.",
+            pdf_path=Path(pdf_path),
+            start_date=str(start_date),
+            end_date=str(end_date),
+        )
+
+        return cast(
+            Response,
+            render_with_context("✅ הדוח נשלח בהצלחה למייל.", "success", file_list),
+        )
+
+    except Exception:
+        file_list = get_file_list_for_render()
+        return cast(
+            Response,
+            handle_exception_context(
+                "שגיאה כללית במהלך שליחת הדוח.", file_list=file_list
+            ),
+        )
+
+
+@reports_bp.route("/download_report/<path:filename>", methods=["GET"])
+def download_report(filename: str) -> Response:
+    """
+    Securely serve a PDF report from the `output/reports_exported` folder,
+    without exposing the entire static directory.
+
+    Edge cases handled:
+    1. Directory traversal attempts (e.g. "…/../secret") are blocked.
+    2. Non-existent or non-file paths return 404.
+    3. Only ".pdf" extensions are allowed.
+    """
+    # 1. Define the safe base directory
+    base_dir = Path(current_app.root_path) / "output" / "reports_exported"
+    base_dir = base_dir.resolve()
+
+    # 2. Construct and resolve the requested path
+    requested_path = (base_dir / filename).resolve()
+
+    # 3. Block any path outside of base_dir
+    if not str(requested_path).startswith(str(base_dir) + os.path.sep):
+        abort(403, description="Access denied.")
+
+    # 4. Verify the file exists and is a regular file
+    if not requested_path.is_file():
+        abort(404, description="Report not found.")
+
+    # 5. Enforce PDF extension
+    if requested_path.suffix.lower() != ".pdf":
+        abort(404, description="Unsupported file type.")
+
+    # 6. Send the file as an attachment with correct MIME type
+    return cast(
+        Response,
+        send_file(
+            requested_path,
+            as_attachment=True,
+            download_name=requested_path.name,  # Flask ≥2.0: use `download_name`
+            mimetype="application/pdf",
+        ),
+    )
+
+
+@reports_bp.route("/overview", methods=["GET"])
+def overview_report() -> Response:
+    """
+    מציג דוח ניהולי עם KPIs וטבלת טכנאים, כולל תמיכה ב־path, from, to.
+    """
+    path = request.args.get("path", "").strip()
+    from_str = request.args.get("from")
+    to_str = request.args.get("to")
+
+    try:
+        date_from = parse_date_flex(from_str) if from_str else None
+        date_to = parse_date_flex(to_str) if to_str else None
+    except ValueError:
+        flash("⚠ תאריך לא תקין", "warning")
+        return cast(Response, redirect("/reports"))
+
+    # ברירת מחדל – הדוח האחרון בתיקיית uploads
+    if not path:
+        upload_dir = Path("uploads/")
+        files = sorted(upload_dir.glob("*.xlsx"), key=os.path.getmtime, reverse=True)
+        if not files:
+            flash("⚠ לא נמצא דוח זמין להצגה", "warning")
+            return cast(Response, redirect("/reports"))
+        path = str(files[0])
+
+    try:
+        df, _ = build_report_data(path, date_from=date_from, date_to=date_to)
+        kpi = get_kpi_summary(df)
+        return cast(
+            Response,
+            make_response(
+                render_template("reports/overview.html", kpi=kpi, summary=None), 200
+            ),
+        )
+    except Exception as e:
+        log.exception("❌ שגיאה בבניית דוח ניהולי")
+        flash(f"שגיאה: {e}", "danger")
+        return cast(Response, redirect("/reports"))
+
+
+@reports_bp.route("/overview/export")
+def export_overview() -> Response:
+    """
+    Export Overview report in CSV, Excel or PDF.
+    Query params:
+      - format: csv | excel | pdf (default: pdf)
+      - path: path to source Excel (optional)
+      - from, to: ISO dates YYYY-MM-DD (optional)
+    """
+    # 1. Read and normalize inputs
+    file_format = request.args.get("format", "pdf").lower()
+    upload_path = request.args.get("path", "").strip()
+    from_str = request.args.get("from")
+    to_str = request.args.get("to")
+
+    # 2. Parse dates
+    try:
+        date_from = parse_date_flex(from_str) if from_str else None
+        date_from = datetime.strptime(from_str, "%Y-%m-%d") if from_str else None
+        date_to = datetime.strptime(to_str, "%Y-%m-%d") if to_str else None
+    except ValueError:
+        flash("⚠️ Invalid date format, use YYYY-MM-DD", "warning")
+        return cast(Response, redirect(url_for("reports.overview")))
+
+    # 3. Fallback to latest upload if no path
+    if not upload_path:
+        upload_dir = Path(current_app.config.get("UPLOAD_FOLDER", "uploads"))
+        candidates = sorted(
+            upload_dir.glob("*.xlsx"), key=lambda p: p.stat().st_mtime, reverse=True
+        )
+        if not candidates:
+            flash("⚠️ No source file found for export", "warning")
+            return cast(Response, redirect(url_for("reports.overview")))
+        upload_path = str(candidates[0])
+
+    # 4. Build data
+    try:
+        df, _ = build_report_data(upload_path, date_from=date_from, date_to=date_to)
+        kpi = get_kpi_summary(df)
+    except Exception as e:
+        log.exception("❌ Error preparing overview data")
+        flash(f"❌ Failed to prepare data: {e}", "danger")
+        return cast(Response, redirect(url_for("reports.overview")))
+
+    # 5. Export by format
+    try:
+        params = request.args.to_dict()
+        if not params:
+            params = {}
+        if file_format == "csv":
+            return export_overview_csv(df, kpi, params)
+        if file_format == "excel":
+            return export_overview_excel(df, kpi, params)
+        if file_format == "pdf":
+            return export_overview_pdf(df, kpi, params)
+        flash(f"⚠️ Unsupported format: {file_format}", "warning")
+        return cast(Response, redirect(url_for("reports.overview")))
+    except Exception as e:
+        log.exception("❌ Error exporting overview report")
+        flash(f"❌ Export failed: {e}", "danger")
+        return cast(Response, redirect(url_for("reports.overview")))

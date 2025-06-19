@@ -1,0 +1,9 @@
+INC_DROP:
+  window: 3
+  pct: 0.30
+TAX_ANOMALY:
+  min_rate: 0.10
+FLAGS_SPIKE:
+  threshold: 5
+HIGH_COMM:
+  threshold: 0.90 

@@ -1,0 +1,112 @@
+============================= test session starts ==============================
+platform linux -- Python 3.12.3, pytest-8.4.0, pluggy-1.6.0 -- /home/dorma/projects/auto_close/venv/bin/python3.12
+cachedir: .pytest_cache
+rootdir: /home/dorma/projects/auto_close
+configfile: pytest.ini
+plugins: dash-3.0.4
+collecting ... collected 1 item
+
+tests/test_run_report_flow.py::test_run_full_report_flow FAILED          [100%]
+
+=================================== FAILURES ===================================
+__________________________ test_run_full_report_flow ___________________________
+
+    def test_run_full_report_flow():
+        """
+        בדיקה מלאה של יצירת דוח PDF כולל manifest.
+        """
+        csv_path = Path("uploads/good_test_data.csv")
+        assert csv_path.exists(), f"❌ קובץ לא קיים: {csv_path}"
+        df = pd.read_csv(csv_path)
+        df = normalize_columns(df)
+    
+>       report_path = create_and_email_report(
+            df=df,
+            report_type="draft_preview",
+            tech_name="דוד",
+            client_id="client123"
+        )
+
+tests/test_run_report_flow.py:19: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+myapp/utils/report_utils.py:392: in create_and_email_report
+    detail_df, summaries = build_report_data(df)
+                           ^^^^^^^^^^^^^^^^^^^^^
+myapp/services/report_analyzer.py:422: in build_report_data
+    df = get_report_dataframe(
+myapp/services/report_analyzer.py:370: in get_report_dataframe
+    df = validate_uploaded_df(data.copy())
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+df =      job_id technician    created  ...        company flag_missing_data  tech
+0  Totals:3                   NaT  ...  ...       False   שרה
+3        A3       יוסי 2024-06-07  ...  AutoClose Ltd             False  יוסי
+
+[4 rows x 19 columns]
+
+    def validate_uploaded_df(df: pd.DataFrame) -> pd.DataFrame:
+        logger.debug(f"[TYPECHECK] {__name__}.validate_uploaded_df → got {type(df).__name__} with shape {getattr(df, 'shape', 'N/A')}")
+        logger.info("🚀 Starting validate_uploaded_df stage")
+        validation_notes = None
+        validated = True
+        try:
+            # 1. Required columns
+            missing = [col for col in REQUIRED_COLUMNS if col not in df.columns]
+            if missing:
+                logger.error(f"[VALIDATION] Missing required columns: {missing}")
+                validated = False
+                validation_notes = f"Missing columns: {missing}"
+                raise ValueError(f"Missing required columns: {missing}")
+    
+            # 2. Numeric columns
+            for col in NUMERIC_COLUMNS:
+                try:
+                    validate_numeric_column(df, col)
+                except Exception as e:
+                    logger.error(f"[VALIDATION] Numeric column error: {col}: {e}")
+                    validated = False
+                    validation_notes = f"Numeric column error: {col}: {e}"
+                    raise
+    
+            # 3. Percent columns
+            for col in PERCENT_COLUMNS:
+                if not df[col].astype(str).str.endswith("%").all():
+                    logger.error(f"[VALIDATION] Column {col} must contain percentage strings like '50%'")
+                    validated = False
+                    validation_notes = f"Column {col} must contain percentage strings like '50%'"
+>                   raise ValueError(f"Column {col} must contain percentage strings like '50%'")
+E                   ValueError: Column tech_share must contain percentage strings like '50%'
+
+myapp/utils/validation_utils.py:51: ValueError
+----------------------------- Captured stdout call -----------------------------
+2025-06-18 20:20:54 [INFO] myapp.utils.report_utils - 📄 יצירת דוח: type=draft_preview, tech=דוד, client=client123
+2025-06-18 20:20:54 [INFO] myapp.utils.report_utils - 🕒 מנקה וממפה עמודות תאריך: ['date', 'closed', 'created']
+🧪 עמודות אחרי normalize_columns: ['job_id', 'technician', 'created', 'date', 'closed', 'job_type', 'address', 'total', 'cash', 'credit', 'billing', 'check', 'tech_share', 'tip_amount', 'parts', 'company_parts', 'company', 'flag_missing_data', 'tech']
+   tech technician
+0                 
+1   דוד        דוד
+2   שרה        שרה
+3  יוסי       יוסי
+------------------------------ Captured log call -------------------------------
+INFO     myapp.utils.report_utils:report_utils.py:368 📄 יצירת דוח: type=draft_preview, tech=דוד, client=client123
+INFO     myapp.utils.report_utils:report_utils.py:381 🕒 מנקה וממפה עמודות תאריך: ['date', 'closed', 'created']
+WARNING  myapp.utils.date_utils:date_utils.py:52 🟡 date: Found 1 invalid date values coerced to NaT
+WARNING  myapp.utils.date_utils:date_utils.py:52 🟡 closed: Found 1 invalid date values coerced to NaT
+WARNING  myapp.utils.date_utils:date_utils.py:52 🟡 created: Found 1 invalid date values coerced to NaT
+ERROR    myapp.utils.validation_utils:validation_utils.py:48 [VALIDATION] Column tech_share must contain percentage strings like '50%'
+ERROR    myapp.utils.validation_utils:validation_utils.py:80 [ERROR] Failed inside validate_uploaded_df – Column tech_share must contain percentage strings like '50%'
+Traceback (most recent call last):
+  File "/home/dorma/projects/auto_close/myapp/utils/validation_utils.py", line 51, in validate_uploaded_df
+    raise ValueError(f"Column {col} must contain percentage strings like '50%'")
+ValueError: Column tech_share must contain percentage strings like '50%'
+=============================== warnings summary ===============================
+tests/test_run_report_flow.py::test_run_full_report_flow
+tests/test_run_report_flow.py::test_run_full_report_flow
+  /home/dorma/projects/auto_close/myapp/utils/validation_utils.py:86: UserWarning: Pandas doesn't allow columns to be created via a new attribute name - see https://pandas.pydata.org/pandas-docs/stable/indexing.html#attribute-access
+    df._autoclose_validation = dict(validated=validated, validation_notes=validation_notes)
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/test_run_report_flow.py::test_run_full_report_flow - ValueError:...
+======================== 1 failed, 2 warnings in 2.42s =========================
