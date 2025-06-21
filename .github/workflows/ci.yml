@@ -27,11 +27,12 @@ jobs:
       - name: Clear pip cache
         run: pip cache purge || true
 
-      - name: Install deps (wheel-only)
+      - name: Install deps (force wheel)
         run: |
           pip install --upgrade pip
+          PIP_NO_CACHE_DIR=1 \
           PIP_ONLY_BINARY=":all:" \
-          pip install --prefer-binary -r requirements.txt
+          pip install --prefer-binary --no-cache-dir -r requirements.txt
 
       - name: Run pre-commit
         run: pre-commit run --all-files --show-diff-on-failure
@@ -67,11 +68,12 @@ jobs:
       - name: Clear pip cache
         run: pip cache purge || true
 
-      - name: Install deps (wheel-only)
+      - name: Install deps (force wheel)
         run: |
           pip install --upgrade pip
+          PIP_NO_CACHE_DIR=1 \
           PIP_ONLY_BINARY=":all:" \
-          pip install --prefer-binary -r requirements.txt
+          pip install --prefer-binary --no-cache-dir -r requirements.txt
 
       - name: Run pre-commit
         run: pre-commit run --all-files --show-diff-on-failure
