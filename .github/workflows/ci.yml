@@ -27,11 +27,10 @@ jobs:
       - name: Clear pip cache
         run: pip cache purge || true
 
-      - name: Install deps (force wheel)
+      - name: Install Pillow from binary only
         run: |
           pip install --upgrade pip
-          PIP_NO_CACHE_DIR=1 \
-          PIP_ONLY_BINARY=":all:" \
+          pip install --no-cache-dir --only-binary=:all: Pillow==10.3.0
           pip install --prefer-binary --no-cache-dir -r requirements.txt
 
       - name: Run pre-commit
@@ -61,18 +60,17 @@ jobs:
           sudo apt-get install -y libjpeg-dev zlib1g-dev
 
       - name: Set up Python
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v5
         with:
           python-version: '3.12'
 
       - name: Clear pip cache
         run: pip cache purge || true
 
-      - name: Install deps (force wheel)
+      - name: Install Pillow from binary only
         run: |
           pip install --upgrade pip
-          PIP_NO_CACHE_DIR=1 \
-          PIP_ONLY_BINARY=":all:" \
+          pip install --no-cache-dir --only-binary=:all: Pillow==10.3.0
           pip install --prefer-binary --no-cache-dir -r requirements.txt
 
       - name: Run pre-commit
@@ -97,7 +95,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
       - name: Set up Python
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v5
         with:
           python-version: '3.12'
       - name: Clear pip cache
