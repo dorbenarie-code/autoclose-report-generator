@@ -4,7 +4,7 @@ jinja2>=3.0,<4.0
 
 # OCR & Image processing
 pytesseract>=0.3.10,<0.4
-Pillow>=10.3.0,<11.0.0
+Pillow>=10.3.0
 
 # Data handling & Excel export
 numpy==1.26.4
